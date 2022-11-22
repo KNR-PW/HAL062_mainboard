@@ -22,16 +22,27 @@
 #include <stm32h7xx.h>
 #include <stm32h7xx_hal_conf.h>
 #include <stm32h743xx.h>
+#include <stm32h7xx_hal_gpio.h>
+#include <system_stm32h7xx.h>
 
 UART_HandleTypeDef huart3;
 
 int main(void)
 {
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	SystemCoreClock = 8000000;	// taktowanie 8Mhz
-
-
-
 	HAL_Init();
+
+	GPIO_InitTypeDef gpio;
+	gpio.Mode = GPIO_MODE_AF_PP;
+	gpio.Pin = GPIO_PIN_3;
+	gpio.Pull = GPIO_PULLDOWN;
+	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &gpio);
+
+	__HAL_RCC_USART3_CLK_ENABLE();
+
+
 	huart3.Instance = USART3;
 	huart3.Init.BaudRate = 115200;
 	huart3.Init.WordLength = UART_WORDLENGTH_8B;
@@ -46,6 +57,6 @@ int main(void)
     /* Loop forever */
 	while(1)
 	{
-		HAL_UART_Transmit(&huart3, &signal, 2, 1000);
+		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
 	}
 }
