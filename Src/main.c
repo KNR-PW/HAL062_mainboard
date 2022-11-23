@@ -26,6 +26,7 @@
 #include <system_stm32h7xx.h>
 
 UART_HandleTypeDef huart3;
+void SysTick_Handler(void){}
 
 int main(void)
 {
@@ -44,7 +45,7 @@ int main(void)
 	gpio.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &gpio);
 
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 //	__HAL_RCC_USART3_CLK_ENABLE();
 
 
@@ -59,12 +60,12 @@ int main(void)
 //	HAL_UART_Init(&huart3);
 //	uint8_t signal = 0xAB;
     /* Loop forever */
-//	while(1)
-//	{
-//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-//		HAL_Delay(1000);
-//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-//		HAL_Delay(1000);
+	while(1)
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		for(uint32_t i=0; i<100; i++){}
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+		for(uint32_t i=0; i<100; i++){}
 //		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
-//	}
+	}
 }
