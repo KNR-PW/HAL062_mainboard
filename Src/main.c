@@ -29,34 +29,42 @@ UART_HandleTypeDef huart3;
 
 int main(void)
 {
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	SystemCoreClock = 8000000;	// taktowanie 8Mhz
+//	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+//	HAL_NVIC_SetPriority(TIM3_IRQn, 1, 1);
+
 	HAL_Init();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+//	SystemCoreClock = 8000000;	// taktowanie 8Mhz
+
 
 	GPIO_InitTypeDef gpio;
-	gpio.Mode = GPIO_MODE_AF_PP;
-	gpio.Pin = GPIO_PIN_3;
-	gpio.Pull = GPIO_PULLDOWN;
+	gpio.Pin = GPIO_PIN_5;
+	gpio.Mode = GPIO_MODE_OUTPUT_PP;
+	gpio.Pull = GPIO_NOPULL;
 	gpio.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &gpio);
 
-	__HAL_RCC_USART3_CLK_ENABLE();
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//	__HAL_RCC_USART3_CLK_ENABLE();
 
 
-	huart3.Instance = USART3;
-	huart3.Init.BaudRate = 115200;
-	huart3.Init.WordLength = UART_WORDLENGTH_8B;
-	huart3.Init.Parity = UART_PARITY_NONE;
-	huart3.Init.StopBits = UART_STOPBITS_1;
-	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-	huart3.Init.Mode = UART_MODE_TX_RX;
-	HAL_UART_Init(&huart3);
-
-	uint8_t signal = 0xAB;
+//	huart3.Instance = USART3;
+//	huart3.Init.BaudRate = 115200;
+//	huart3.Init.WordLength = UART_WORDLENGTH_8B;
+//	huart3.Init.Parity = UART_PARITY_NONE;
+//	huart3.Init.StopBits = UART_STOPBITS_1;
+//	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+//	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+//	huart3.Init.Mode = UART_MODE_TX_RX;
+//	HAL_UART_Init(&huart3);
+//	uint8_t signal = 0xAB;
     /* Loop forever */
-	while(1)
-	{
-		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
-	}
+//	while(1)
+//	{
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+//		HAL_Delay(1000);
+//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+//		HAL_Delay(1000);
+//		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
+//	}
 }
