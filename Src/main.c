@@ -19,7 +19,7 @@
 #include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_conf.h>
 
-UART_HandleTypeDef huart3;
+static UART_HandleTypeDef huart3;
 void SysTick_Handler(void)
 {
 	HAL_IncTick();
@@ -55,7 +55,6 @@ int main(void)
 	while(1)
 	{
 		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
-//		for(uint32_t i=0; i<100; i++){}
 		HAL_Delay(1000);
 	}
 }
