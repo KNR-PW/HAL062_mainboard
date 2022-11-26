@@ -7,4 +7,4 @@ enum ETH_STATUS {
 };
 
 enum ETH_STATUS eth_init(USART_TypeDef* uart_instance);
-
+enum ETH_STATUS eth_sendData(char* ID, char* info);

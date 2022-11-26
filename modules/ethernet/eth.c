@@ -1,6 +1,9 @@
+#include <stm32h7xx_hal.h>
+#include <stm32h7xx_hal_conf.h>
 #include "ethernet/eth.h"
 
 enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
+
 // Initialization of Ethernet module.
 //	Works in NUCLEO H743ZI2
 
@@ -52,3 +55,28 @@ enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
 
 	return ETH_OK;
 }
+
+
+enum ETH_STATUS eth_sendData(char* ID, char* info){
+
+	uint8_t data[19];
+	data[0] = '#';
+	for(uint8_t i=0;i<2;i++)
+		data[i+1]=ID[i];
+
+	for(uint8_t i=0;i<16;i++)
+		data[i+3] = info[i];
+
+
+	static UART_HandleTypeDef huart_eth;
+
+	if(HAL_UART_Transmit(&huart_eth,data,19,1000) == HAL_OK)
+	{
+		return ETH_OK;
+	}
+	return ETH_ERROR;
+
+}
+
+
+
