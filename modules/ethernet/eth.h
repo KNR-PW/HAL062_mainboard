@@ -6,4 +6,5 @@ enum ETH_STATUS {
 	ETH_ERROR = 1
 };
 
-enum ETH_STATUS eth_init(UART_HandleTypeDef huart_eth, GPIO_InitTypeDef gpio_eth);
+enum ETH_STATUS eth_init(USART_TypeDef* uart_instance);
+

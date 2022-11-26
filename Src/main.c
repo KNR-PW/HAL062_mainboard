@@ -29,10 +29,8 @@ void SysTick_Handler(void)
 int main(void)
 {
 	//Ethernet module initialization
-	static UART_HandleTypeDef huart_eth;
-	static GPIO_InitTypeDef gpio_eth;
-	eth_init(huart_eth, gpio_eth);
-
+	eth_init(USART3);
+	UART_HandleTypeDef huart_eth;
 
 	//test for working initialized uart
 	uint8_t signal = 0xAB;
