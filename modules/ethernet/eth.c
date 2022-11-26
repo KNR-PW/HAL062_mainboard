@@ -2,7 +2,7 @@
 #include <stm32h7xx_hal_conf.h>
 #include "ethernet/eth.h"
 
-enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
+bool Eth_init(USART_TypeDef* uart_instance){
 
 // Initialization of Ethernet module.
 //	Works in NUCLEO H743ZI2
@@ -11,9 +11,9 @@ enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
 //	USART_TypeDef uart_instance - needed to correctly set register and gpio
 
 
-// Output: Function returns enum type ETH_STATUS:
-//	ETH_OK - when initialization was done successfully
-//	ETH_ERROR - when initialization had problems
+// Output: Function returns bool type:
+//	0 - when initialization was done successfully
+//	1 - when initialization had problems
 //
 //
 //	!!! Global static !!!
@@ -26,6 +26,7 @@ enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
 	static UART_HandleTypeDef huart_eth;
 	static GPIO_InitTypeDef gpio_eth;
 
+	//GPIO initialization for USART3
 	if(uart_instance == USART3){
 	HAL_Init();
 	gpio_eth.Pin = GPIO_PIN_8;
@@ -39,9 +40,10 @@ enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
 	}
 	else
 	{
-		return ETH_ERROR;
+		return 1;
 	}
 
+	//USART initialization - default data and instance
 	huart_eth.Instance = uart_instance;
 	huart_eth.Init.BaudRate = 115200;
 	huart_eth.Init.WordLength = UART_WORDLENGTH_8B;
@@ -50,14 +52,27 @@ enum ETH_STATUS eth_init(USART_TypeDef* uart_instance){
 	huart_eth.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	huart_eth.Init.OverSampling = UART_OVERSAMPLING_16;
 	huart_eth.Init.Mode = UART_MODE_TX_RX;
-
 	HAL_UART_Init(&huart_eth);
 
-	return ETH_OK;
+	return 0;
 }
 
 
-enum ETH_STATUS eth_sendData(char* ID, char* info){
+bool Eth_sendData(char* ID, char* info){
+//
+// !!! WORKS FOR ROVER COMMUNICATION FRAME !!!
+//
+//	-------------------------------------------
+//	Input:
+//	-ID - 2 bytes (2 x uint8_t) identification of area which info is about
+//	-INFO - 16 bytes (16 x uint8_t) information connected with concrete ID
+//
+
+	// Output: Function returns bool type:
+	//	0 - when initialization was done successfully
+	//	1 - when initialization had problems
+
+
 
 	uint8_t data[19];
 	data[0] = '#';
@@ -72,9 +87,9 @@ enum ETH_STATUS eth_sendData(char* ID, char* info){
 
 	if(HAL_UART_Transmit(&huart_eth,data,19,1000) == HAL_OK)
 	{
-		return ETH_OK;
+		return 0;
 	}
-	return ETH_ERROR;
+	return 1;
 
 }
 

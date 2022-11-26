@@ -1,10 +1,11 @@
+#ifndef MODULE_ETH_ETH_H
+#define MODULE_ETH_ETH_H
+
 #include <stm32h7xx_hal_conf.h>
 #include <stm32h7xx_hal.h>
+#include <stdbool.h>
 
-enum ETH_STATUS {
-	ETH_OK = 0,
-	ETH_ERROR = 1
-};
+bool Eth_init(USART_TypeDef* uart_instance);
+bool Eth_sendData(char* ID, char* info);
 
-enum ETH_STATUS eth_init(USART_TypeDef* uart_instance);
-enum ETH_STATUS eth_sendData(char* ID, char* info);
+#endif // MODULE_ETH_ETH_H

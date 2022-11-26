@@ -15,10 +15,11 @@
  *
  ******************************************************************************
  */
-
+#include <stdbool.h>
 #include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_conf.h>
 #include "ethernet/eth.h"
+
 
 
 void SysTick_Handler(void)
@@ -29,16 +30,16 @@ void SysTick_Handler(void)
 int main(void)
 {
 	//Ethernet module initialization
-	eth_init(USART3);
-	UART_HandleTypeDef huart_eth;
+	Eth_init(USART3);
 
-	//test for working initialized uart
-	uint8_t signal = 0xAB;
 
 	//Infinite loop
+
 	while(1)
 	{
-		HAL_UART_Transmit(&huart_eth, &signal, 1, 1000);
+		char id[2] = "71";
+		char msg[16] = "UPxxxxxxxxxxxxxx";
+		Eth_sendData(id, msg);
 		HAL_Delay(1000);
 	}
 }
