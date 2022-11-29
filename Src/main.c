@@ -27,6 +27,10 @@ void SysTick_Handler(void)
 	HAL_IncTick();
 }
 
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	huart->gState = HAL_UART_STATE_READY;
+}
+
 int main(void)
 {
 	//Ethernet module initialization

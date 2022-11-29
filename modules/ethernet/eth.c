@@ -2,6 +2,8 @@
 #include <stm32h7xx_hal_conf.h>
 #include "ethernet/eth.h"
 
+static UART_HandleTypeDef huart_eth;
+
 bool Eth_init(USART_TypeDef* uart_instance){
 
 // Initialization of Ethernet module.
@@ -23,7 +25,6 @@ bool Eth_init(USART_TypeDef* uart_instance){
 //
 //
 
-	static UART_HandleTypeDef huart_eth;
 	static GPIO_InitTypeDef gpio_eth;
 
 	//GPIO initialization for USART3
@@ -51,7 +52,7 @@ bool Eth_init(USART_TypeDef* uart_instance){
 	huart_eth.Init.StopBits = UART_STOPBITS_1;
 	huart_eth.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	huart_eth.Init.OverSampling = UART_OVERSAMPLING_16;
-	huart_eth.Init.Mode = UART_MODE_TX_RX;
+	huart_eth.Init.Mode = UART_MODE_TX;
 	HAL_UART_Init(&huart_eth);
 
 	return 0;
@@ -73,7 +74,6 @@ bool Eth_sendData(char* ID, char* info){
 	//	1 - when initialization had problems
 
 
-
 	uint8_t data[19];
 	data[0] = '#';
 	for(uint8_t i=0;i<2;i++)
@@ -82,15 +82,11 @@ bool Eth_sendData(char* ID, char* info){
 	for(uint8_t i=0;i<16;i++)
 		data[i+3] = info[i];
 
-
-	static UART_HandleTypeDef huart_eth;
-
-	if(HAL_UART_Transmit(&huart_eth,data,19,1000) == HAL_OK)
+	if(HAL_UART_Transmit(&huart_eth, &data, 19 ,1000) == HAL_OK)
 	{
 		return 0;
 	}
 	return 1;
-
 }
 
 
