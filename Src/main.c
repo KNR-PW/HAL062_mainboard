@@ -16,8 +16,8 @@
  ******************************************************************************
  */
 
+#include <stm32h7xx_hal.h>
 #include <stdint.h>
-#include <stm32h7xx_hal_uart.h>
 #include "bluetooth/bluetooth.h"
 
 void SysTick_Handler(void)
