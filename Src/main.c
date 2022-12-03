@@ -18,9 +18,26 @@
 
 #include <stdint.h>
 #include <stm32h7xx_hal_uart.h>
+#include "bluetooth/bluetooth.h"
+
+void SysTick_Handler(void)
+{
+	HAL_IncTick();
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	huart->gState = HAL_UART_STATE_READY;
+}
 
 int main(void)
 {
-    /* Loop forever */
-	for(;;);
+	BT_Init(USART3);
+
+	while(1)
+	{
+		char id[2] = "71";
+		char msg[16] = "UPxxxxxxxxxxxxxx";
+		BT_SendData(id, msg);
+		HAL_Delay(1000);
+	}
 }
