@@ -63,6 +63,26 @@ void Leds_turnOffLed(Leds_ID ledId){
 	}
 }
 
+void Leds_toggleLed(Leds_ID ledId){
+	switch(ledId){
+	case LED1:
+		HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_2);
+		break;
+	case LED2:
+		HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_3);
+		break;
+	case LED3:
+		HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_4);
+		break;
+	case LED4:
+		HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_5);
+		break;
+	case LED5:
+		HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_6);
+		break;
+	}
+}
+
 void Leds_welcomeFLash(void){
 	Leds_turnOnLed(LED1);
 	Leds_turnOnLed(LED2);
