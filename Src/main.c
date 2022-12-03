@@ -18,8 +18,9 @@
 
 #include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_conf.h>
+#include "leds/leds.h"
 
-static UART_HandleTypeDef huart3;
+// static UART_HandleTypeDef huart3;
 void SysTick_Handler(void)
 {
 	HAL_IncTick();
@@ -28,33 +29,33 @@ void SysTick_Handler(void)
 int main(void)
 {
 	HAL_Init();
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-
-	GPIO_InitTypeDef gpio;
-	gpio.Pin = GPIO_PIN_8;
-	gpio.Mode = GPIO_MODE_AF_PP;
-	gpio.Alternate = GPIO_AF7_USART3;
-	gpio.Pull = GPIO_PULLDOWN;
-	gpio.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOD, &gpio);
-
-	__HAL_RCC_USART3_CLK_ENABLE();
-
-	huart3.Instance = USART3;
-	huart3.Init.BaudRate = 115200;
-	huart3.Init.WordLength = UART_WORDLENGTH_8B;
-	huart3.Init.Parity = UART_PARITY_NONE;
-	huart3.Init.StopBits = UART_STOPBITS_1;
-	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-	huart3.Init.Mode = UART_MODE_TX_RX;
-
-	HAL_UART_Init(&huart3);
-	uint8_t signal = 0xAB;
+//	__HAL_RCC_GPIOD_CLK_ENABLE();
+//
+//	GPIO_InitTypeDef gpio;
+//	gpio.Pin = GPIO_PIN_2;
+//	gpio.Mode = GPIO_MODE_AF_PP;
+//	gpio.Pull = GPIO_NOPULL;
+//	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+//	HAL_GPIO_Init(GPIOG, &gpio);
+//
+//	__HAL_RCC_USART3_CLK_ENABLE();
+//
+//	huart3.Instance = USART3;
+//	huart3.Init.BaudRate = 115200;
+//	huart3.Init.WordLength = UART_WORDLENGTH_8B;
+//	huart3.Init.Parity = UART_PARITY_NONE;
+//	huart3.Init.StopBits = UART_STOPBITS_1;
+//	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+//	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+//	huart3.Init.Mode = UART_MODE_TX_RX;
+//
+//	HAL_UART_Init(&huart3);
+//	uint8_t signal = 0xAB;
+	Leds_init();
     /* Loop forever */
 	while(1)
 	{
-		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
-		HAL_Delay(1000);
+//		HAL_UART_Transmit(&huart3, &signal, 1, 1000);
+//		HAL_Delay(1000);
 	}
 }
