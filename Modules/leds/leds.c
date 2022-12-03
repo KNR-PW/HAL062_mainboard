@@ -8,6 +8,7 @@
 
 #include <stm32h7xx_hal_rcc.h>
 #include <stm32h7xx_hal_gpio.h>
+#include <stm32h7xx_hal.h> // Simple HAL delay
 
 #include "leds.h"
 
@@ -60,4 +61,19 @@ void Leds_turnOffLed(Leds_ID ledId){
 		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_6, 0u);
 		break;
 	}
+}
+
+void Leds_welcomeFLash(void){
+	Leds_turnOnLed(LED1);
+	Leds_turnOnLed(LED2);
+	Leds_turnOnLed(LED2);
+	Leds_turnOnLed(LED3);
+	Leds_turnOnLed(LED4);
+	HAL_Delay(1000);
+	Leds_turnOffLed(LED1);
+	Leds_turnOffLed(LED2);
+	Leds_turnOffLed(LED2);
+	Leds_turnOffLed(LED3);
+	Leds_turnOffLed(LED4);
+	HAL_Delay(1000);
 }
