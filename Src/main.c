@@ -17,7 +17,6 @@
  */
 
 #include <stm32h7xx_hal.h>
-#include <stm32h7xx_hal_conf.h>
 #include <stdint.h>
 #include "bluetooth/bluetooth.h"
 
@@ -33,12 +32,21 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 int main(void)
 {
 	BT_Init(UART5);
+	char id_rx[2];
+	char msg_rx[16];
+	BT_ReceiveData(&id_rx, &msg_rx);
+
+	char id[2] = "71";
+	char msg[16] = "UPxxxxxxxxxxxxxx";
+
 
 	while(1)
 	{
-		char id[2] = "71";
-		char msg[16] = "UPxxxxxxxxxxxxxx";
-		BT_SendData(id, msg);
+
+//		BT_SendData(&id, &msg);
 		HAL_Delay(1000);
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
+
+
 	}
 }

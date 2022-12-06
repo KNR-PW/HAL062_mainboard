@@ -1,7 +1,8 @@
-#include <stm32h7xx_hal_conf.h>
+
 #include "bluetooth/bluetooth.h"
 
 
+static uint8_t RX_Data;
 static UART_HandleTypeDef huart_bt;
 
 bool BT_Init(USART_TypeDef* uart_instance) {
@@ -24,9 +25,9 @@ bool BT_Init(USART_TypeDef* uart_instance) {
 		gpio_bt_rx.Pull = GPIO_PULLDOWN;
 		gpio_bt_rx.Speed = GPIO_SPEED_FREQ_LOW;
 
-		__HAL_RCC_GPIOD_CLK_ENABLE();
-		HAL_GPIO_Init(GPIOD, &gpio_bt_tx);
-		HAL_GPIO_Init(GPIOD, &gpio_bt_rx);
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		HAL_GPIO_Init(GPIOB, &gpio_bt_tx);
+		HAL_GPIO_Init(GPIOB, &gpio_bt_rx);
 
 
 		__HAL_RCC_UART5_CLK_ENABLE();
@@ -68,4 +69,16 @@ bool BT_SendData(char* ID, char* info){
 	return 1;
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uart_instance)
+{
+	HAL_UART_Receive_IT(&huart_bt, &RX_Data, 19);
+}
+
+bool BT_ReceiveData(char* ID, char* info)
+{
+
+	HAL_UART_Receive_IT(&huart_bt, &RX_Data, 19);
+
+	return 0;
+}
 
