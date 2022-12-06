@@ -7,7 +7,6 @@
  */
 #include <stdbool.h>
 #include <stm32h7xx_hal.h>
-#include <stm32h7xx_hal_conf.h>
 #include "ethernet/eth.h"
 #include "leds/leds.h"
 

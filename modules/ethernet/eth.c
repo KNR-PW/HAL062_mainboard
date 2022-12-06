@@ -1,5 +1,3 @@
-#include <stm32h7xx_hal.h>
-#include <stm32h7xx_hal_conf.h>
 #include "ethernet/eth.h"
 
 static UART_HandleTypeDef huart_eth;

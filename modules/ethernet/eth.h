@@ -1,7 +1,6 @@
 #ifndef MODULE_ETH_ETH_H
 #define MODULE_ETH_ETH_H
 
-#include <stm32h7xx_hal_conf.h>
 #include <stm32h7xx_hal.h>
 #include <stdbool.h>
 
