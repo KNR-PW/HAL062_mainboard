@@ -17,6 +17,7 @@
  */
 
 #include <stm32h7xx_hal.h>
+#include <stm32h7xx_hal_conf.h>
 #include <stdint.h>
 #include "bluetooth/bluetooth.h"
 
@@ -31,7 +32,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 
 int main(void)
 {
-	BT_Init(USART3);
+	BT_Init(UART5);
 
 	while(1)
 	{
