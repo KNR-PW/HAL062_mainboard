@@ -16,10 +16,9 @@
  ******************************************************************************
  */
 
+#include <bluetooth/bluetooth.h>
 #include <stm32h7xx_hal.h>
-#include <stm32h7xx_hal_conf.h>
 #include <stdint.h>
-#include "bluetooth/bluetooth.h"
 
 void SysTick_Handler(void)
 {
@@ -32,13 +31,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 
 int main(void)
 {
+	HAL_Init();
 	BT_Init(UART5);
+	BT_ReceivingData();
+
 
 	while(1)
 	{
-		char id[2] = "71";
-		char msg[16] = "UPxxxxxxxxxxxxxx";
-		BT_SendData(id, msg);
-		HAL_Delay(1000);
+
 	}
 }
