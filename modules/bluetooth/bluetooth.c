@@ -97,20 +97,6 @@ bool BT_SendData(char* ID, char* info)
 	return 1;
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef* uart_instance)
-{
-	HAL_UART_Receive_IT(&huart_bt, &RX_Data, 19);
-}
-
-bool BT_ReceiveData(char* ID, char* info)
-{
-
-	HAL_UART_Receive_IT(&huart_bt, &RX_Data, 19);
-
-	return 0;
-}
-
-
 
 bool BT_ReceivingData()
 {
