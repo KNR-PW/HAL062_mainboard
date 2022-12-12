@@ -32,9 +32,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 int main(void)
 {
 	HAL_Init();
-	BT_Init(UART5);
-	BT_ReceivingData();
-
+	BT_Init();
+	BT_ReceiveData();
 
 	while(1)
 	{
