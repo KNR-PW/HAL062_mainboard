@@ -4,12 +4,12 @@
 #include <stm32h7xx_hal_rcc_ex.h>
 #include <stm32h7xx_hal_cortex.h>
 
-static uint8_t rxBuffer[19];
+static uint8_t btRxBuffer[19];
 static UART_HandleTypeDef btHuart;
 static GPIO_InitTypeDef btGpio;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	HAL_UART_Receive_IT(&btHuart, rxBuffer, 19);
+	HAL_UART_Receive_IT(&btHuart, btRxBuffer, 19);
 }
 
 void UART5_IRQHandler() {
@@ -50,21 +50,21 @@ bool BT_Init() {
 }
 
 bool BT_SendData(char *ID, char *info) {
-	uint8_t txBuffer[19];
-	txBuffer[0] = '#';
+	uint8_t btTxBuffer[19];
+	btTxBuffer[0] = '#';
 	for (uint8_t i = 0; i < 2; i++)
-		txBuffer[i + 1] = ID[i];
+		btTxBuffer[i + 1] = ID[i];
 
 	for (uint8_t i = 0; i < 16; i++)
-		txBuffer[i + 3] = info[i];
+		btTxBuffer[i + 3] = info[i];
 
-	if (HAL_UART_Transmit(&btHuart, txBuffer, 19, 1000) == HAL_OK)
+	if (HAL_UART_Transmit(&btHuart, btTxBuffer, 19, 1000) == HAL_OK)
 		return 0;
 	return 1;
 }
 
 bool BT_ReceiveData() {
-	if (HAL_UART_Receive_IT(&btHuart, rxBuffer, 19) == HAL_OK)
+	if (HAL_UART_Receive_IT(&btHuart, btRxBuffer, 19) == HAL_OK)
 		return 0;
 	return 1;
 }
