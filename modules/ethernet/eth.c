@@ -10,7 +10,6 @@ static uint8_t ethRxBuffer[19];
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	HAL_UART_Receive_IT(&ethHuart, ethRxBuffer, 19);
-	HAL_UART_Transmit(&ethHuart, ethRxBuffer, 19, 1000);
 }
 void USART1_IRQHandler() {
 	HAL_UART_IRQHandler(&ethHuart);
