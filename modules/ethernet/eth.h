@@ -4,7 +4,8 @@
 #include <stm32h7xx_hal.h>
 #include <stdbool.h>
 
-bool Eth_init(USART_TypeDef* uart_instance);
-bool Eth_sendData(char* ID, char* info);
+bool Eth_Init();
+bool Eth_sendData(char *ID, char *info);
+bool Eth_ReceiveData();
 
 #endif // MODULE_ETH_ETH_H

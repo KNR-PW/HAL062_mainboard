@@ -1,91 +1,73 @@
 #include "ethernet/eth.h"
+#include <stm32h7xx_hal_gpio.h>
+#include <stm32h7xx_hal_rcc.h>
+#include <stm32h7xx_hal_rcc_ex.h>
+#include <stm32h7xx_hal_cortex.h>
 
-static UART_HandleTypeDef huart_eth;
+static UART_HandleTypeDef ethHuart;
+static GPIO_InitTypeDef ethGpio;
+static uint8_t ethRxBuffer[19];
 
-bool Eth_init(USART_TypeDef* uart_instance){
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	HAL_UART_Receive_IT(&ethHuart, ethRxBuffer, 19);
+	HAL_UART_Transmit(&ethHuart, ethRxBuffer, 19, 1000);
+}
+void USART1_IRQHandler() {
+	HAL_UART_IRQHandler(&ethHuart);
+}
 
-// Initialization of Ethernet module.
-//	Works in NUCLEO H743ZI2
+bool Eth_Init() {
 
-// Input:
-//	USART_TypeDef uart_instance - needed to correctly set register and gpio
+	ethHuart.Instance = USART1;
+	ethHuart.Init.BaudRate = 115200;
+	ethHuart.Init.WordLength = UART_WORDLENGTH_8B;
+	ethHuart.Init.Parity = UART_PARITY_NONE;
+	ethHuart.Init.StopBits = UART_STOPBITS_1;
+	ethHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
+	ethHuart.Init.Mode = UART_MODE_TX_RX;
 
+	//	Peripheral clock enable
+	__HAL_RCC_USART1_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 
-// Output: Function returns bool type:
-//	0 - when initialization was done successfully
-//	1 - when initialization had problems
-//
-//
-//	!!! Global static !!!
-//	For those who doesn't want to use prepared ETH functions
-//	there are static global variable to UART_HandleTypeDef huart_eth and
-//	GPIO_InitTypeDef gpio_eth. Change them carefully
-//
-//
+	ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
+	ethGpio.Mode = GPIO_MODE_AF_PP;
+	ethGpio.Alternate = GPIO_AF7_USART1;
+	ethGpio.Pull = GPIO_PULLDOWN;
+	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &ethGpio);
 
-	static GPIO_InitTypeDef gpio_eth;
+	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(USART1_IRQn);
 
-	//GPIO initialization for USART3
-	if(uart_instance == USART3){
-	HAL_Init();
-	gpio_eth.Pin = GPIO_PIN_8;
-	gpio_eth.Mode = GPIO_MODE_AF_PP;
-	gpio_eth.Alternate = GPIO_AF7_USART3;
-	gpio_eth.Pull = GPIO_PULLDOWN;
-	gpio_eth.Speed = GPIO_SPEED_FREQ_LOW;
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-	HAL_GPIO_Init(GPIOD, &gpio_eth);
-	__HAL_RCC_USART3_CLK_ENABLE();
-	}
-	else
-	{
-		return 1;
-	}
-
-	//USART initialization - default data and instance
-	huart_eth.Instance = uart_instance;
-	huart_eth.Init.BaudRate = 115200;
-	huart_eth.Init.WordLength = UART_WORDLENGTH_8B;
-	huart_eth.Init.Parity = UART_PARITY_NONE;
-	huart_eth.Init.StopBits = UART_STOPBITS_1;
-	huart_eth.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart_eth.Init.OverSampling = UART_OVERSAMPLING_16;
-	huart_eth.Init.Mode = UART_MODE_TX;
-	HAL_UART_Init(&huart_eth);
+	HAL_UART_Init(&ethHuart);
+	HAL_UARTEx_SetRxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
+	HAL_UARTEx_SetTxFifoThreshold(&ethHuart, UART_TXFIFO_THRESHOLD_1_8);
+	HAL_UARTEx_EnableFifoMode(&ethHuart);
 
 	return 0;
 }
 
+bool Eth_sendData(char *ID, char *info) {
 
-bool Eth_sendData(char* ID, char* info){
-//
-// !!! WORKS FOR ROVER COMMUNICATION FRAME !!!
-//
-//	-------------------------------------------
-//	Input:
-//	-ID - 2 bytes (2 x uint8_t) identification of area which info is about
-//	-INFO - 16 bytes (16 x uint8_t) information connected with concrete ID
-//
+	uint8_t ethTxBuffer[19];
+	ethTxBuffer[0] = '#';
+	for (uint8_t i = 0; i < 2; i++)
+		ethTxBuffer[i + 1] = ID[i];
 
-	// Output: Function returns bool type:
-	//	0 - when initialization was done successfully
-	//	1 - when initialization had problems
+	for (uint8_t i = 0; i < 16; i++)
+		ethTxBuffer[i + 3] = info[i];
 
-
-	uint8_t data[19];
-	data[0] = '#';
-	for(uint8_t i=0;i<2;i++)
-		data[i+1]=ID[i];
-
-	for(uint8_t i=0;i<16;i++)
-		data[i+3] = info[i];
-
-	if(HAL_UART_Transmit(&huart_eth, &data, 19 ,1000) == HAL_OK)
-	{
+	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, 1000) == HAL_OK) {
 		return 0;
 	}
 	return 1;
 }
 
-
+bool Eth_ReceiveData() {
+	if (HAL_UART_Receive_IT(&ethHuart, ethRxBuffer, 19) == HAL_OK)
+		return 0;
+	return 1;
+}
 
