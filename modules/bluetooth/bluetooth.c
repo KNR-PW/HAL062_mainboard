@@ -4,29 +4,19 @@
 #include <stm32h7xx_hal_rcc_ex.h>
 #include <stm32h7xx_hal_cortex.h>
 
-static uint8_t RxBuffer[19];
+static uint8_t rxBuffer[19];
 static UART_HandleTypeDef btHuart;
 static GPIO_InitTypeDef btGpio;
 
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-
-			HAL_UART_Receive_IT(&btHuart, RxBuffer, 19);
-
-			//TEMORARY TESTING FUNCTION: TODO: DELETE
-			HAL_UART_Transmit(&btHuart, RxBuffer, 19, 1000);
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	HAL_UART_Receive_IT(&btHuart, rxBuffer, 19);
 }
 
-
-void UART5_IRQHandler()
-{
+void UART5_IRQHandler() {
 	HAL_UART_IRQHandler(&btHuart);
 }
 
-
-bool BT_Init()
-{
+bool BT_Init() {
 
 	btHuart.Instance = UART5;
 	btHuart.Init.BaudRate = 115200;
@@ -59,30 +49,23 @@ bool BT_Init()
 	return 0;
 }
 
+bool BT_SendData(char *ID, char *info) {
+	uint8_t txBuffer[19];
+	txBuffer[0] = '#';
+	for (uint8_t i = 0; i < 2; i++)
+		txBuffer[i + 1] = ID[i];
 
-bool BT_SendData(char* ID, char* info)
-{
-	uint8_t data[19];
-	data[0] = '#';
-	for(uint8_t i=0;i<2;i++)
-		data[i+1]=ID[i];
+	for (uint8_t i = 0; i < 16; i++)
+		txBuffer[i + 3] = info[i];
 
-	for(uint8_t i=0;i<16;i++)
-		data[i+3] = info[i];
-
-	if(HAL_UART_Transmit(&btHuart, data, 19,1000) == HAL_OK)
+	if (HAL_UART_Transmit(&btHuart, txBuffer, 19, 1000) == HAL_OK)
 		return 0;
 	return 1;
 }
 
-
-bool BT_ReceiveData()
-{
-	if(HAL_UART_Receive_IT(&btHuart, RxBuffer, 19)==HAL_OK)
+bool BT_ReceiveData() {
+	if (HAL_UART_Receive_IT(&btHuart, rxBuffer, 19) == HAL_OK)
 		return 0;
 	return 1;
 }
-
-
-
 

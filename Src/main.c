@@ -20,21 +20,17 @@
 #include <stm32h7xx_hal.h>
 #include <stdint.h>
 
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void) {
 	HAL_IncTick();
 }
 
-int main(void)
-{
+int main(void) {
 	HAL_Init();
 	BT_Init();
 	BT_ReceiveData();
 
-	while(1)
-	{
+	while (1) {
 
 	}
 }
-
 
