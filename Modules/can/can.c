@@ -9,8 +9,7 @@
 FDCAN_FilterTypeDef sFilterConfig;
 FDCAN_TxHeaderTypeDef TxHeader;
 FDCAN_RxHeaderTypeDef RxHeader;
-uint8_t TxData_Node1_To_Node2[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0x00, 0x11,
-		0x22, 0x33, 0x44, 0x55, 0x66 };
+uint8_t TxData_Node1_To_Node2[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0x00, 0x11, 0x22};//, 0x33, 0x44, 0x55, 0x66 };
 uint8_t RxData_From_Node2[12];
 
 FDCAN_HandleTypeDef hfdcan1;
@@ -26,10 +25,10 @@ void MX_FDCAN1_Init(void) {
 	/* USER CODE BEGIN FDCAN1_Init 1 */
 
 	/* USER CODE END FDCAN1_Init 1 */
-	hfdcan1.Instance = FDCAN1;
-	hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
+	hfdcan1.Instance = FDCAN2;
+	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
-	hfdcan1.Init.AutoRetransmission = ENABLE;
+	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
 	hfdcan1.Init.NominalPrescaler = 1;
@@ -48,12 +47,12 @@ void MX_FDCAN1_Init(void) {
 	hfdcan1.Init.RxFifo1ElmtsNbr = 0;
 	hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
 	hfdcan1.Init.RxBuffersNbr = 1;
-	hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_12;
+	hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
 	hfdcan1.Init.TxEventsNbr = 0;
 	hfdcan1.Init.TxBuffersNbr = 1;
 	hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
 	hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-	hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_12;
+	hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
 	if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK) {
 		Error_Handler2();
 	}
@@ -78,16 +77,17 @@ void MX_FDCAN1_Init(void) {
 	if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
 		Error_Handler2();
 	}
+
 }
 
 void Can_testMessage(void) {
 	TxHeader.Identifier = 0x1;
 	TxHeader.IdType = FDCAN_STANDARD_ID;
 	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
-	TxHeader.DataLength = FDCAN_DLC_BYTES_12;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
 	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	TxHeader.BitRateSwitch = FDCAN_BRS_ON;
-	TxHeader.FDFormat = FDCAN_FD_CAN;
+	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
 	TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
 	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader,
@@ -95,13 +95,16 @@ void Can_testMessage(void) {
 		Error_Handler2();
 	}
 
+	hfdcan1.Instance->TXBAR=0x1u;
+
 	/* Send Tx buffer message */
 	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan1, FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler2();
 	}
 
-	 /* Polling for transmission complete on buffer index 0 */
-	while(HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1);
+	/* Polling for transmission complete on buffer index 0 */
+	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1)
+		;
 //	CAN_TxHeader.StdId = 20;
 //	CAN_TxHeader.ExtId = 20;
 //	CAN_TxHeader.IDE = CAN_ID_STD;

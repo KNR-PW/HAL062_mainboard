@@ -22,6 +22,8 @@ void SysTick_Handler(void)
 
 int main(void)
 {
+
+	__HAL_RCC_GPIOB_CLK_ENABLE();
 	HAL_Init();
 	SystemClock_Config();
 
