@@ -9,7 +9,7 @@
 FDCAN_FilterTypeDef sFilterConfig;
 FDCAN_TxHeaderTypeDef TxHeader;
 FDCAN_RxHeaderTypeDef RxHeader;
-uint8_t TxData_Node1_To_Node2[] = { 0x10, 0x32, 0x54, 0x76, 0x98, 0x00, 0x11, 0x22};//, 0x33, 0x44, 0x55, 0x66 };
+uint8_t TxData_Node1_To_Node2[] = { 0xFF, 0xFF, 0xFF, 0xAB};//, 0xFF, 0xFF, 0xFF, 0xFF};//, 0x33, 0x44, 0x55, 0x66 };
 uint8_t RxData_From_Node2[12];
 
 FDCAN_HandleTypeDef hfdcan1;
@@ -31,14 +31,14 @@ void MX_FDCAN1_Init(void) {
 	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
-	hfdcan1.Init.NominalPrescaler = 1;
-	hfdcan1.Init.NominalSyncJumpWidth = 13;
-	hfdcan1.Init.NominalTimeSeg1 = 86;
-	hfdcan1.Init.NominalTimeSeg2 = 13;
-	hfdcan1.Init.DataPrescaler = 2;
-	hfdcan1.Init.DataSyncJumpWidth = 12;
-	hfdcan1.Init.DataTimeSeg1 = 12;
-	hfdcan1.Init.DataTimeSeg2 = 12;
+	hfdcan1.Init.NominalPrescaler = 100; // 0.5 Mhz
+	hfdcan1.Init.NominalSyncJumpWidth = 1;
+	hfdcan1.Init.NominalTimeSeg1 = 9;
+	hfdcan1.Init.NominalTimeSeg2 = 8;
+	hfdcan1.Init.DataPrescaler = 100; // 0.5 MHz
+	hfdcan1.Init.DataSyncJumpWidth = 1;
+	hfdcan1.Init.DataTimeSeg1 = 9;
+	hfdcan1.Init.DataTimeSeg2 = 8;
 	hfdcan1.Init.MessageRAMOffset = 0;
 	hfdcan1.Init.StdFiltersNbr = 1;
 	hfdcan1.Init.ExtFiltersNbr = 0;
@@ -81,10 +81,10 @@ void MX_FDCAN1_Init(void) {
 }
 
 void Can_testMessage(void) {
-	TxHeader.Identifier = 0x1;
+	TxHeader.Identifier = 0x01;
 	TxHeader.IdType = FDCAN_STANDARD_ID;
 	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
-	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_4;
 	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	TxHeader.BitRateSwitch = FDCAN_BRS_ON;
 	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
