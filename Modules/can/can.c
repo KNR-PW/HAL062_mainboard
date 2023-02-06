@@ -1,20 +1,25 @@
 /* Includes ------------------------------------------------------------------*/
+
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal_cortex.h>
 #include <stm32h7xx_hal_rcc.h>
 #include <stm32h7xx_hal_fdcan.h>
-#include "can.h"
-#include <leds/leds.h>
+#include <stm32h7xx_hal.h>
+
+#include "leds/leds.h"
+#include "can/can.h"
+#include "error_handlers/error_handlers.h"
 
 FDCAN_FilterTypeDef sFilterConfig;
 FDCAN_TxHeaderTypeDef TxHeader;
 FDCAN_RxHeaderTypeDef RxHeader;
-uint8_t TxData_Node1_To_Node2[] = { 0xFF, 0xFF, 0xFF, 0xAB};//, 0xFF, 0xFF, 0xFF, 0xFF};//, 0x33, 0x44, 0x55, 0x66 };
+uint8_t TxData_Node1_To_Node2[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB,
+		0xFC };
 uint8_t RxData_From_Node2[12];
 
 FDCAN_HandleTypeDef hfdcan1;
 
-void Error_Handler2(void);
+void Error_Handler(void);
 
 void MX_FDCAN1_Init(void) {
 
@@ -31,11 +36,11 @@ void MX_FDCAN1_Init(void) {
 	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
-	hfdcan1.Init.NominalPrescaler = 100; // 0.5 Mhz
+	hfdcan1.Init.NominalPrescaler = 150; // 0.5 Mhz
 	hfdcan1.Init.NominalSyncJumpWidth = 1;
 	hfdcan1.Init.NominalTimeSeg1 = 9;
 	hfdcan1.Init.NominalTimeSeg2 = 8;
-	hfdcan1.Init.DataPrescaler = 100; // 0.5 MHz
+	hfdcan1.Init.DataPrescaler = 150; // 0.5 MHz
 	hfdcan1.Init.DataSyncJumpWidth = 1;
 	hfdcan1.Init.DataTimeSeg1 = 9;
 	hfdcan1.Init.DataTimeSeg2 = 8;
@@ -54,7 +59,7 @@ void MX_FDCAN1_Init(void) {
 	hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
 	hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
 	if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK) {
-		Error_Handler2();
+		Error_Handler();
 	}
 
 	/* Configure standard ID reception filter to Rx buffer 0 */
@@ -70,12 +75,12 @@ void MX_FDCAN1_Init(void) {
 #endif
 	sFilterConfig.RxBufferIndex = 0;
 	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK) {
-		Error_Handler2();
+		Error_Handler();
 	}
 
 	/* Start the FDCAN module */
 	if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
-		Error_Handler2();
+		Error_Handler();
 	}
 
 }
@@ -84,7 +89,7 @@ void Can_testMessage(void) {
 	TxHeader.Identifier = 0x01;
 	TxHeader.IdType = FDCAN_STANDARD_ID;
 	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
-	TxHeader.DataLength = FDCAN_DLC_BYTES_4;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
 	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	TxHeader.BitRateSwitch = FDCAN_BRS_ON;
 	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
@@ -92,14 +97,14 @@ void Can_testMessage(void) {
 	TxHeader.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
 	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader,
 			TxData_Node1_To_Node2, FDCAN_TX_BUFFER0) != HAL_OK) {
-		Error_Handler2();
+		Error_Handler();
 	}
 
-	hfdcan1.Instance->TXBAR=0x1u;
+	hfdcan1.Instance->TXBAR = 0x1u;
 
 	/* Send Tx buffer message */
 	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan1, FDCAN_TX_BUFFER0) != HAL_OK) {
-		Error_Handler2();
+		Error_Handler();
 	}
 
 	/* Polling for transmission complete on buffer index 0 */
@@ -120,12 +125,74 @@ void Can_testMessage(void) {
 	Leds_toggleLed(LED4);
 }
 
-void Error_Handler2(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	while (1) {
-		volatile uint8_t a = 0;
-		a = 1;
+void HAL_MspInit(void) {
+	__HAL_RCC_SYSCFG_CLK_ENABLE();
+}
+
+/**
+ * @brief FDCAN MSP Initialization
+ * This function configures the hardware resources used in this example
+ * @param hfdcan: FDCAN handle pointer
+ * @retval None
+ */
+void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef *hfdcan) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
+	if (hfdcan->Instance == FDCAN2) {
+
+		/** Initializes the peripherals clock
+		 */
+		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
+		PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL;
+		if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK) {
+			//Error_Handler();
+		}
+
+		/* Peripheral clock enable */
+		__HAL_RCC_FDCAN_CLK_ENABLE();
+
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		/**FDCAN1 GPIO Configuration
+		 PB8     ------> FDCAN1_RX
+		 PB9     ------> FDCAN1_TX
+		 */
+		GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6;
+		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+		GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN2;
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+		/* USER CODE BEGIN FDCAN1_MspInit 1 */
+
+		/* USER CODE END FDCAN1_MspInit 1 */
 	}
-	/* USER CODE END Error_Handler_Debug */
+
+}
+
+/**
+ * @brief FDCAN MSP De-Initialization
+ * This function freeze the hardware resources used in this example
+ * @param hfdcan: FDCAN handle pointer
+ * @retval None
+ */
+void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef *hfdcan) {
+	if (hfdcan->Instance == FDCAN1) {
+		/* USER CODE BEGIN FDCAN1_MspDeInit 0 */
+
+		/* USER CODE END FDCAN1_MspDeInit 0 */
+		/* Peripheral clock disable */
+		__HAL_RCC_FDCAN_CLK_DISABLE();
+
+		/**FDCAN1 GPIO Configuration
+		 PB8     ------> FDCAN1_RX
+		 PB9     ------> FDCAN1_TX
+		 */
+		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0 | GPIO_PIN_1);
+
+		/* USER CODE BEGIN FDCAN1_MspDeInit 1 */
+
+		/* USER CODE END FDCAN1_MspDeInit 1 */
+	}
+
 }
