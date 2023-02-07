@@ -23,13 +23,6 @@ void Error_Handler(void);
 
 void MX_FDCAN1_Init(void) {
 
-	/* USER CODE BEGIN FDCAN1_Init 0 */
-
-	/* USER CODE END FDCAN1_Init 0 */
-
-	/* USER CODE BEGIN FDCAN1_Init 1 */
-
-	/* USER CODE END FDCAN1_Init 1 */
 	hfdcan1.Instance = FDCAN2;
 	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
@@ -178,9 +171,6 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef *hfdcan) {
  */
 void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef *hfdcan) {
 	if (hfdcan->Instance == FDCAN1) {
-		/* USER CODE BEGIN FDCAN1_MspDeInit 0 */
-
-		/* USER CODE END FDCAN1_MspDeInit 0 */
 		/* Peripheral clock disable */
 		__HAL_RCC_FDCAN_CLK_DISABLE();
 
@@ -190,9 +180,6 @@ void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef *hfdcan) {
 		 */
 		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0 | GPIO_PIN_1);
 
-		/* USER CODE BEGIN FDCAN1_MspDeInit 1 */
-
-		/* USER CODE END FDCAN1_MspDeInit 1 */
 	}
 
 }
