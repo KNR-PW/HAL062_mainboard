@@ -1,8 +1,9 @@
-#include "ethernet/eth.h"
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal_rcc.h>
 #include <stm32h7xx_hal_rcc_ex.h>
 #include <stm32h7xx_hal_cortex.h>
+
+#include "ethernet/eth.h"
 
 static UART_HandleTypeDef ethHuart;
 static GPIO_InitTypeDef ethGpio;
