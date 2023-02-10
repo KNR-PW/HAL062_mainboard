@@ -96,8 +96,8 @@ bool Eth_Init() {
 	HAL_UART_Init(&ethHuart);
 	HAL_UARTEx_SetRxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
 	HAL_UARTEx_SetTxFifoThreshold(&ethHuart, UART_TXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_EnableFifoMode(&ethHuart);
-	// HAL_UARTEx_DisableFifoMode(&ethHuart);
+	// HAL_UARTEx_EnableFifoMode(&ethHuart);
+	HAL_UARTEx_DisableFifoMode(&ethHuart);
 
 
 	return 0;
