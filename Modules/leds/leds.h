@@ -11,6 +11,7 @@
 #define LED_3	GPIO_PIN_4
 #define LED_4	GPIO_PIN_5
 #define LED_5	GPIO_PIN_6
+#define LEDS_PORT GPIOG
 
 // @brief LEDs ID structure
 typedef enum{
@@ -28,9 +29,13 @@ void Leds_init(void);
 // @param ledId Led ID
 void Leds_turnOnLed(Leds_ID ledId);
 
-// @brief Tursn off particular led.
+// @brief Turns off particular led.
 // @param ledId Led ID
 void Leds_turnOffLed(Leds_ID ledId);
+
+// @brief Tursn off all leds.
+// @param ledId Led ID
+void Leds_turnOffAllLeds(void);
 
 // @brief Toggles particular led.
 // @param ledId Led ID
