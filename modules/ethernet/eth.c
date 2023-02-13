@@ -6,36 +6,33 @@
 //#include <stm32h7xx_hal_def.h>
 
 #include "ethernet/eth.h"
+#include "can/can.h"
 
 static UART_HandleTypeDef ethHuart;
 static GPIO_InitTypeDef ethGpio;
 static uint8_t UART_ReceivedRaw[22];
-uint8_t searching=0;
-uint8_t magnetosearching=0;
+uint8_t searching = 0u;
+uint8_t magnetosearching = 0u;
 
-uint8_t tutaj=0;
+uint8_t tutaj = 0u;
 
 DMA_HandleTypeDef hdma_usart1_rx;
 
-volatile UART_MessageTypeDef UART_MessageRecieved;
+volatile static MessageTypeDef UART_MessageRecieved;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance==USART1)
-	{
+	if (huart->Instance == USART1) {
 		UART_Decode();
-		if (searching==0)
-		{
-		// COM_RunUartAction();
-		HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 19);
-		return;
+		if (searching == 0) {
+			COM_RunUartAction(&UART_MessageRecieved);
+			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 19);
+			return;
 		}
-		if (searching==1)
-		{
+		if (searching == 1) {
 			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 1);
 			return;
 		}
-		if (searching==2)
-		{
+		if (searching == 2) {
 			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 18);
 			return;
 		}
@@ -62,12 +59,11 @@ bool Eth_Init() {
 	hdma_usart1_rx.Init.Mode = DMA_CIRCULAR;
 	hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
 	hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-	if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
-	{
-	  Error_Handler();
+	if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK) {
+		Error_Handler();
 	}
 
-	__HAL_LINKDMA(&ethHuart,hdmarx,hdma_usart1_rx);
+	__HAL_LINKDMA(&ethHuart, hdmarx, hdma_usart1_rx);
 
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 115200;
@@ -89,7 +85,6 @@ bool Eth_Init() {
 	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &ethGpio);
 
-
 //
 
 //	HAL_NVIC_SetPriority(USART1_IRQn, 1, 1);
@@ -100,7 +95,6 @@ bool Eth_Init() {
 	HAL_UARTEx_SetTxFifoThreshold(&ethHuart, UART_TXFIFO_THRESHOLD_1_8);
 	HAL_UARTEx_EnableFifoMode(&ethHuart);
 	// HAL_UARTEx_DisableFifoMode(&ethHuart);
-
 
 	return 0;
 }
@@ -122,7 +116,7 @@ bool Eth_sendData(char *ID, char *info) {
 }
 
 bool Eth_ReceiveData() {
-	if(HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
+	if (HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
 		return 0;
 	return 1;
 //	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
@@ -130,72 +124,69 @@ bool Eth_ReceiveData() {
 //	return 1;
 }
 
-void UART_Decode()
-{
+void UART_Decode() {
 	/*Test czy pierwszy jest # by sie przydal*/
-	if (UART_ReceivedRaw[0]!='#'&& searching !=2)
-	{
+	if (UART_ReceivedRaw[0] != '#' && searching != 2) {
 		searching = 1;
 		return;
 	}
-	if (UART_ReceivedRaw[0]=='#' && searching == 1)
-	{
+	if (UART_ReceivedRaw[0] == '#' && searching == 1) {
 		searching = 2;
-		tutaj=1;
+		tutaj = 1;
 		return;
 	}
-	if (searching == 2)
-	{
+	if (searching == 2) {
 		//nie ma '#' w tym wiec trzeba do gory jedno przeniesc
-		for (int p=17;p>=0;p--)
-		{
-			UART_ReceivedRaw[p+1]=UART_ReceivedRaw[p];
+		for (int p = 17; p >= 0; p--) {
+			UART_ReceivedRaw[p + 1] = UART_ReceivedRaw[p];
 		}
-		searching =0;
+		searching = 0;
 	}
 	UART_MessageRecieved.ID = 0;
 
 	/*Zamiana hex w ACSII na liczbe*/
 
-	if (UART_ReceivedRaw[1]>=65)
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[1]-55)*0x10;
+	if (UART_ReceivedRaw[1] >= 65)
+		UART_MessageRecieved.ID += (UART_ReceivedRaw[1] - 55) * 0x10;
 	else
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[1]-48)*0x10;
+		UART_MessageRecieved.ID += (UART_ReceivedRaw[1] - 48) * 0x10;
 
-	if (UART_ReceivedRaw[2]>=65)
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[2]-55);
+	if (UART_ReceivedRaw[2] >= 65)
+		UART_MessageRecieved.ID += (UART_ReceivedRaw[2] - 55);
 	else
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[2]-48);
+		UART_MessageRecieved.ID += (UART_ReceivedRaw[2] - 48);
 
-	uint8_t i=3;
-	uint8_t index=0;
-	while (i<19 && UART_ReceivedRaw[i]!=88)			//x - end of transmission
+	uint8_t i = 3;
+	uint8_t index = 0;
+	while (i < 19 && UART_ReceivedRaw[i] != 88)		//x - end of transmission
 	{
-		UART_MessageRecieved.data[index]=0;
-		if (UART_ReceivedRaw[i]>=65)
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i]-55)*0x10;
+		UART_MessageRecieved.data[index] = 0;
+		if (UART_ReceivedRaw[i] >= 65)
+			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 55)
+					* 0x10;
 		else
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i]-48)*0x10;
+			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 48)
+					* 0x10;
 		i++;
-		if (UART_ReceivedRaw[i]>=65)
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i]-55);
+		if (UART_ReceivedRaw[i] >= 65)
+			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 55);
 		else
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i]-48);
+			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 48);
 		i++;
 		index++;
 	}
-	UART_MessageRecieved.lenght=index;
+	UART_MessageRecieved.lenght = index;
 }
 
-void DMA_STR0_IRQHandler(void){
+void DMA_STR0_IRQHandler(void) {
 
 	HAL_DMA_IRQHandler(&hdma_usart1_rx);
 
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx, __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
+	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx,
+			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
 }
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 	uint32_t a = 0;
 	a++;
 }

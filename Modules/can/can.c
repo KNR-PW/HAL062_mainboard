@@ -6,18 +6,29 @@
 #include <stm32h7xx_hal_fdcan.h>
 #include <stm32h7xx_hal.h>
 
+#include <string.h>
+
 #include "leds/leds.h"
 #include "can/can.h"
 #include "error_handlers/error_handlers.h"
 
 FDCAN_FilterTypeDef sFilterConfig;
 FDCAN_TxHeaderTypeDef TxHeader;
+FDCAN_TxHeaderTypeDef TxHeader_CAN2;
 FDCAN_RxHeaderTypeDef RxHeader;
 uint8_t TxData_Node1_To_Node2[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB,
 		0xFC };
 uint8_t RxData_From_Node2[12];
 
+static MessageTypeDef UART_MessageRecieved;
+
 FDCAN_HandleTypeDef hfdcan1;
+FDCAN_HandleTypeDef hfdcan2;
+
+
+command commandList[150];
+int speed_left;
+int speed_right;
 
 void Error_Handler(void);
 
@@ -115,7 +126,7 @@ void Can_testMessage(void) {
 //		dane[i] = 0;
 //	}
 //	HAL_CAN_AddTxMessage(&hcan1, &CAN_TxHeader, dane, &CAN_TxMailbox);
-	Leds_toggleLed(LED4);
+	//Leds_toggleLed(LED4);
 }
 
 void HAL_MspInit(void) {
@@ -182,4 +193,160 @@ void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef *hfdcan) {
 
 	}
 
+}
+
+
+void sendTest() {
+	TxHeader.Identifier = 0x01u;
+	TxHeader.IdType = FDCAN_STANDARD_ID;
+	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	TxHeader.BitRateSwitch = FDCAN_BRS_ON;
+	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
+	TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	TxHeader.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
+
+//	CAN_TxHeader.StdId = 20;
+//	CAN_TxHeader.ExtId = 20;
+//	CAN_TxHeader.IDE = CAN_ID_STD;
+//	CAN_TxHeader.RTR = CAN_RTR_DATA;
+//	CAN_TxHeader.DLC = 8;
+//	uint8_t dane[8];
+//	dane[0] = speed_left;
+//	dane[1] = speed_right;
+//	for (int i = 2; i < 8; i++) {
+//		dane[i] = 0;
+//	}
+//	HAL_CAN_AddTxMessage(&hcan1, &CAN_TxHeader, dane, &CAN_TxMailbox);
+//	GPIO_LEDToggle(LED_RED);
+}
+
+void transferTo() {
+	if (UART_MessageRecieved.ID > 0 && UART_MessageRecieved.ID < 128)
+		transferToCan1();
+	else if (UART_MessageRecieved.ID > 127 && UART_MessageRecieved.ID < 256)
+		transferToCan2();
+	return;
+}
+
+void COM_RunUartAction(MessageTypeDef* message) {
+	UART_MessageRecieved.ID = message->ID;
+	memcpy(UART_MessageRecieved.data, message->data, 8);
+	UART_MessageRecieved.lenght = message->lenght;
+	transferTo();
+	/*
+	 UART_MessageTypeDef msg;
+	 msg.ID=CAN_RxHeader.StdId;
+	 for (int i=0;i<8;i++)
+	 {
+	 msg.data[i]= CAN_RxMsg[i];
+	 }
+	 msg.lenght=CAN_RxHeader.DLC;
+
+	 return;
+	 */
+}
+//void COM_RunCanAction() {
+//	transferToUart();
+//}
+//
+//void transferToUart() {
+//	MessageTypeDef msg;
+//	msg.ID = CAN_RxHeader.StdId;
+//	for (int i = 0; i < 8; i++) {
+//		msg.data[i] = CAN_RxMsg[i];
+//	}
+//	msg.lenght = CAN_RxHeader.DLC;
+//	UART3_Send(msg);
+//}
+
+void transferToCan1() {
+	TxHeader.Identifier = 0x01u;
+	TxHeader.IdType = FDCAN_STANDARD_ID;
+	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
+	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	TxHeader.BitRateSwitch = FDCAN_BRS_ON;
+	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
+	TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	TxHeader.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
+
+	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader,
+			UART_MessageRecieved.data, FDCAN_TX_BUFFER0) != HAL_OK) {
+		Error_Handler();
+	}
+
+	hfdcan1.Instance->TXBAR = 0x1u;
+
+	/* Send Tx buffer message */
+	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan1, FDCAN_TX_BUFFER0) != HAL_OK) {
+		Error_Handler();
+	}
+
+	/* Polling for transmission complete on buffer index 0 */
+	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1)
+		;
+
+//	CAN_TxHeader.StdId = MessageRecieved.ID;
+//	CAN_TxHeader.ExtId = MessageRecieved.ID;
+//	CAN_TxHeader.IDE = CAN_ID_STD;
+//	CAN_TxHeader.RTR = CAN_RTR_DATA;
+//	CAN_TxHeader.DLC = MessageRecieved.lenght;
+//	HAL_CAN_AddTxMessage(&hcan1, &CAN_TxHeader, MessageRecieved.data,
+//			&CAN_TxMailbox);
+	//GPIO_LEDToggle(LED_RED);
+}
+
+void transferToCan2() {
+	TxHeader_CAN2.Identifier = UART_MessageRecieved.ID;
+	TxHeader_CAN2.IdType = FDCAN_STANDARD_ID;
+	TxHeader_CAN2.TxFrameType = FDCAN_DATA_FRAME;
+	TxHeader_CAN2.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader_CAN2.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	TxHeader_CAN2.BitRateSwitch = FDCAN_BRS_ON;
+	TxHeader_CAN2.FDFormat = FDCAN_CLASSIC_CAN;
+	TxHeader_CAN2.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	TxHeader_CAN2.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
+
+	uint8_t dane[8];
+	for (int i = 0; i < 8; i++) {
+		dane[i] = UART_MessageRecieved.data[i];
+	}
+
+	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan2, &TxHeader,
+			dane, FDCAN_TX_BUFFER0) != HAL_OK) {
+		Error_Handler();
+	}
+
+	hfdcan2.Instance->TXBAR = 0x1u;
+
+	/* Send Tx buffer message */
+	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan2, FDCAN_TX_BUFFER0) != HAL_OK) {
+		Error_Handler();
+	}
+
+	/* Polling for transmission complete on buffer index 0 */
+	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan2, FDCAN_TX_BUFFER0) == 1)
+		;
+
+
+
+//	CAN_TxHeader2.StdId = UART_MessageRecieved.ID;
+//	CAN_TxHeader2.ExtId = UART_MessageRecieved.ID;
+//	CAN_TxHeader2.IDE = CAN_ID_STD;
+//	CAN_TxHeader2.RTR = CAN_RTR_DATA;
+//	CAN_TxHeader2.DLC = UART_MessageRecieved.lenght;
+//
+//	HAL_CAN_AddTxMessage(&hcan2, &CAN_TxHeader2, dane, &CAN_TxMailbox2);
+//	GPIO_LEDToggle(LED_RED);
+
+}
+
+void ignoreCAN() {
+	return;
+}
+
+void ignoreUART() {
+	return;
 }

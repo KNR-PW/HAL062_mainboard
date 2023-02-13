@@ -61,8 +61,8 @@ int main(void) {
 //		Leds_toggleLed(LED5);
 //		HAL_Delay(1000);
 	// Error_Handler();
-		Can_testMessage();
-		HAL_Delay(50);
+		//Can_testMessage();
+		// HAL_Delay(50);
 	}
 }
 
