@@ -21,7 +21,7 @@
 void SystemClock_Config(void);
 
 #define USE_HAL_UART_REGISTER_CALLBACKS
-// static UART_HandleTypeDef huart3;
+
 void SysTick_Handler(void) {
 	static int work_led_cnt = 0;
 	static bool work_led_state = false;
@@ -51,14 +51,8 @@ int main(void) {
 	MX_FDCAN1_Init();
 	Leds_welcomeFLash();
 
-	__HAL_RCC_DMA1_CLK_ENABLE();
-	HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
-
 	Eth_Init();
 	Eth_ReceiveData();
-
-
 
 	/* Loop forever */
 	while (1) {

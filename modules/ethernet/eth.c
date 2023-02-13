@@ -20,36 +20,54 @@ DMA_HandleTypeDef hdma_usart1_rx;
 volatile UART_MessageTypeDef UART_MessageRecieved;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	// HAL_UART_Receive_IT(&ethHuart, ethRxBuffer, 19);
-
 	if (huart->Instance==USART1)
 	{
 		UART_Decode();
 		if (searching==0)
 		{
 		// COM_RunUartAction();
-		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+		HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 19);
 		return;
 		}
 		if (searching==1)
 		{
-			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 1);
+			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 1);
 			return;
 		}
 		if (searching==2)
 		{
-			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
+			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 18);
 			return;
 		}
 	}
-
 }
 
 void USART1_IRQHandler() {
-	HAL_UART_IRQHandler(&ethHuart);
+//	HAL_UART_IRQHandler(&ethHuart);
+//	HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
 }
 
 bool Eth_Init() {
+	__HAL_RCC_DMA1_CLK_ENABLE();
+	HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+
+	hdma_usart1_rx.Instance = DMA1_Stream0;
+	hdma_usart1_rx.Init.Request = DMA_REQUEST_USART1_RX;
+	hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_usart1_rx.Init.Mode = DMA_CIRCULAR;
+	hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
+	hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
+	{
+	  Error_Handler();
+	}
+
+	__HAL_LINKDMA(&ethHuart,hdmarx,hdma_usart1_rx);
 
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 115200;
@@ -58,7 +76,7 @@ bool Eth_Init() {
 	ethHuart.Init.StopBits = UART_STOPBITS_1;
 	ethHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	ethHuart.Init.Mode = UART_MODE_TX_RX;
+	ethHuart.Init.Mode = UART_MODE_RX;
 
 	//	Peripheral clock enable
 	__HAL_RCC_USART1_CLK_ENABLE();
@@ -72,32 +90,16 @@ bool Eth_Init() {
 	HAL_GPIO_Init(GPIOA, &ethGpio);
 
 
-
-	hdma_usart1_rx.Instance = DMA1_Stream0;
-	hdma_usart1_rx.Init.Request = DMA_REQUEST_USART1_RX;
-	hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
-	hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
-	hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
-	hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-	hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-	hdma_usart1_rx.Init.Mode = DMA_NORMAL;
-	hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
-	hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-	if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
-	{
-	  Error_Handler();
-	}
-
-	__HAL_LINKDMA(&ethHuart,hdmarx,hdma_usart1_rx);
 //
-	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(USART1_IRQn);
+
+//	HAL_NVIC_SetPriority(USART1_IRQn, 1, 1);
+//	HAL_NVIC_EnableIRQ(USART1_IRQn);
 
 	HAL_UART_Init(&ethHuart);
 	HAL_UARTEx_SetRxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
 	HAL_UARTEx_SetTxFifoThreshold(&ethHuart, UART_TXFIFO_THRESHOLD_1_8);
-	// HAL_UARTEx_EnableFifoMode(&ethHuart);
-	HAL_UARTEx_DisableFifoMode(&ethHuart);
+	HAL_UARTEx_EnableFifoMode(&ethHuart);
+	// HAL_UARTEx_DisableFifoMode(&ethHuart);
 
 
 	return 0;
@@ -188,5 +190,12 @@ void UART_Decode()
 void DMA_STR0_IRQHandler(void){
 
 	HAL_DMA_IRQHandler(&hdma_usart1_rx);
+
+	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx, __HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
 }
 
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+	uint32_t a = 0;
+	a++;
+}
