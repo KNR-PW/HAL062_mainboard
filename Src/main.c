@@ -54,6 +54,9 @@ int main(void) {
 	Eth_Init();
 	Eth_ReceiveData();
 
+	BT_Init();
+	BT_ReceiveData();
+
 	/* Loop forever */
 	while (1) {
 //		Leds_toggleLed(LED5);

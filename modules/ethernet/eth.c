@@ -9,7 +9,11 @@
 #include "can/can.h"
 
 static UART_HandleTypeDef ethHuart;
+static UART_HandleTypeDef btHuart;
+
 static GPIO_InitTypeDef ethGpio;
+static GPIO_InitTypeDef btGpio;
+
 static uint8_t UART_ReceivedRaw[22];
 uint8_t searching = 0u;
 uint8_t magnetosearching = 0u;
@@ -17,6 +21,7 @@ uint8_t magnetosearching = 0u;
 uint8_t tutaj = 0u;
 
 DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart5_rx;
 
 volatile static MessageTypeDef UART_MessageRecieved;
 
@@ -37,11 +42,86 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			return;
 		}
 	}
+	else if(huart->Instance == UART5)
+	{
+		UART_Decode();
+		if (searching == 0) {
+			COM_RunUartAction(&UART_MessageRecieved);
+			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 19);
+			return;
+		}
+		if (searching == 1) {
+			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 1);
+			return;
+		}
+		if (searching == 2) {
+			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 18);
+			return;
+		}
+	}
 }
 
 void USART1_IRQHandler() {
 //	HAL_UART_IRQHandler(&ethHuart);
 //	HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+}
+
+void UART5_IRQHandler() {
+//	HAL_UART_IRQHandler(&ethHuart);
+//	HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+}
+
+
+bool BT_Init() {
+	__HAL_RCC_DMA1_CLK_ENABLE();
+	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+	hdma_usart5_rx.Instance = DMA1_Stream1;
+	hdma_usart5_rx.Init.Request = DMA_REQUEST_UART5_RX;
+	hdma_usart5_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_usart5_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_usart5_rx.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_usart5_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_usart5_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_usart5_rx.Init.Mode = DMA_CIRCULAR;
+	hdma_usart5_rx.Init.Priority = DMA_PRIORITY_LOW;
+	hdma_usart5_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	if (HAL_DMA_Init(&hdma_usart5_rx) != HAL_OK) {
+		Error_Handler();
+	}
+
+	__HAL_LINKDMA(&ethHuart, hdmarx, hdma_usart5_rx);
+
+	btHuart.Instance = UART5;
+	btHuart.Init.BaudRate = 115200;
+	btHuart.Init.WordLength = UART_WORDLENGTH_8B;
+	btHuart.Init.Parity = UART_PARITY_NONE;
+	btHuart.Init.StopBits = UART_STOPBITS_1;
+	btHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	btHuart.Init.OverSampling = UART_OVERSAMPLING_16;
+	btHuart.Init.Mode = UART_MODE_RX;
+
+	/* Peripheral clock enable */
+	__HAL_RCC_UART5_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+
+	btGpio.Pin = GPIO_PIN_12 | GPIO_PIN_13;
+	btGpio.Mode = GPIO_MODE_AF_PP;
+	btGpio.Pull = GPIO_NOPULL;
+	btGpio.Speed = GPIO_SPEED_FREQ_LOW;
+	btGpio.Alternate = GPIO_AF14_UART5;
+	HAL_GPIO_Init(GPIOB, &btGpio);
+
+//	HAL_NVIC_SetPriority(UART5_IRQn, 0, 0);
+//	HAL_NVIC_EnableIRQ(UART5_IRQn);
+
+	HAL_UART_Init(&btHuart);
+	HAL_UARTEx_SetRxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_1_8);
+	HAL_UARTEx_SetTxFifoThreshold(&btHuart, UART_TXFIFO_THRESHOLD_1_8);
+	HAL_UARTEx_EnableFifoMode(&btHuart);
+
+	return 0;
 }
 
 bool Eth_Init() {
@@ -115,6 +195,15 @@ bool Eth_sendData(char *ID, char *info) {
 	return 1;
 }
 
+bool BT_ReceiveData() {
+	if (HAL_UART_Receive_DMA(&btHuart, UART_ReceivedRaw, 19) == HAL_OK)
+		return 0;
+	return 1;
+//	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
+//		return 0;
+//	return 1;
+}
+
 bool Eth_ReceiveData() {
 	if (HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
 		return 0;
@@ -184,6 +273,14 @@ void DMA_STR0_IRQHandler(void) {
 
 	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx,
 			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
+}
+
+void DMA_STR1_IRQHandler(void) {
+
+	HAL_DMA_IRQHandler(&hdma_usart5_rx);
+
+	__HAL_DMA_CLEAR_FLAG(&hdma_usart5_rx,
+			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart5_rx));
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
