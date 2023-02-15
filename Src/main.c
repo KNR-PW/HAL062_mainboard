@@ -20,7 +20,7 @@
 
 void SystemClock_Config(void);
 
-#define USE_HAL_UART_REGISTER_CALLBACKS
+//#define USE_HAL_UART_REGISTER_CALLBACKS
 
 void SysTick_Handler(void) {
 	static int work_led_cnt = 0;
@@ -51,8 +51,8 @@ int main(void) {
 	MX_FDCAN1_Init();
 	Leds_welcomeFLash();
 
-	Eth_Init();
-	Eth_ReceiveData();
+//	Eth_Init();
+//	Eth_ReceiveData();
 
 	BT_Init();
 	BT_ReceiveData();

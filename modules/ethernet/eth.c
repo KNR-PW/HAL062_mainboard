@@ -23,6 +23,8 @@ uint8_t tutaj = 0u;
 DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart5_rx;
 
+void UART_Decode();
+
 volatile static MessageTypeDef UART_MessageRecieved;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
@@ -42,7 +44,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			return;
 		}
 	}
-	else if(huart->Instance == UART5)
+	else if(huart->Instance == USART3)
 	{
 		UART_Decode();
 		if (searching == 0) {
@@ -74,11 +76,11 @@ void UART5_IRQHandler() {
 
 bool BT_Init() {
 	__HAL_RCC_DMA1_CLK_ENABLE();
-	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+	HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
 
-	hdma_usart5_rx.Instance = DMA1_Stream1;
-	hdma_usart5_rx.Init.Request = DMA_REQUEST_UART5_RX;
+	hdma_usart5_rx.Instance = DMA1_Stream2;
+	hdma_usart5_rx.Init.Request = DMA_REQUEST_USART3_RX;
 	hdma_usart5_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
 	hdma_usart5_rx.Init.PeriphInc = DMA_PINC_DISABLE;
 	hdma_usart5_rx.Init.MemInc = DMA_MINC_ENABLE;
@@ -91,9 +93,9 @@ bool BT_Init() {
 		Error_Handler();
 	}
 
-	__HAL_LINKDMA(&ethHuart, hdmarx, hdma_usart5_rx);
+	__HAL_LINKDMA(&btHuart, hdmarx, hdma_usart5_rx);
 
-	btHuart.Instance = UART5;
+	btHuart.Instance = USART3;
 	btHuart.Init.BaudRate = 115200;
 	btHuart.Init.WordLength = UART_WORDLENGTH_8B;
 	btHuart.Init.Parity = UART_PARITY_NONE;
@@ -103,15 +105,15 @@ bool BT_Init() {
 	btHuart.Init.Mode = UART_MODE_RX;
 
 	/* Peripheral clock enable */
-	__HAL_RCC_UART5_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_USART3_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
 
-	btGpio.Pin = GPIO_PIN_12 | GPIO_PIN_13;
+	btGpio.Pin = GPIO_PIN_8 | GPIO_PIN_9;
 	btGpio.Mode = GPIO_MODE_AF_PP;
 	btGpio.Pull = GPIO_NOPULL;
 	btGpio.Speed = GPIO_SPEED_FREQ_LOW;
-	btGpio.Alternate = GPIO_AF14_UART5;
-	HAL_GPIO_Init(GPIOB, &btGpio);
+	btGpio.Alternate = GPIO_AF7_USART3;
+	HAL_GPIO_Init(GPIOD, &btGpio);
 
 //	HAL_NVIC_SetPriority(UART5_IRQn, 0, 0);
 //	HAL_NVIC_EnableIRQ(UART5_IRQn);
@@ -275,7 +277,7 @@ void DMA_STR0_IRQHandler(void) {
 			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
 }
 
-void DMA_STR1_IRQHandler(void) {
+void DMA_STR2_IRQHandler(void) {
 
 	HAL_DMA_IRQHandler(&hdma_usart5_rx);
 
