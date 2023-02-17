@@ -51,8 +51,8 @@ int main(void) {
 	MX_FDCAN1_Init();
 	Leds_welcomeFLash();
 
-//	Eth_Init();
-//	Eth_ReceiveData();
+	Eth_Init();
+	Eth_ReceiveData();
 
 	BT_Init();
 	BT_ReceiveData();
