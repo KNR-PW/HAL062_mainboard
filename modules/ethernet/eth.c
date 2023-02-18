@@ -233,7 +233,7 @@ bool BT_ReceiveData() {
 }
 
 bool Eth_ReceiveData() {
-	if (HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
+	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
 		return 0;
 	return 1;
 //	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
@@ -243,56 +243,66 @@ bool Eth_ReceiveData() {
 
 void UART_Decode() {
 	/*Test czy pierwszy jest # by sie przydal*/
-	if (UART_ReceivedRaw[0] != '#' && searching != 2) {
-		searching = 1;
-		return;
-	}
-	if (UART_ReceivedRaw[0] == '#' && searching == 1) {
-		searching = 2;
-		tutaj = 1;
-		return;
-	}
-	if (searching == 2) {
-		//nie ma '#' w tym wiec trzeba do gory jedno przeniesc
-		for (int p = 17; p >= 0; p--) {
-			UART_ReceivedRaw[p + 1] = UART_ReceivedRaw[p];
-		}
-		searching = 0;
-	}
-	UART_MessageRecieved.ID = 0;
+//	if (UART_ReceivedRaw[0] != '#' && searching != 2) {
+//		searching = 1;
+//		return;
+//	}
+//	if (UART_ReceivedRaw[0] == '#' && searching == 1) {
+//		searching = 2;
+//		tutaj = 1;
+//		return;
+//	}
+//	if (searching == 2) {
+//		//nie ma '#' w tym wiec trzeba do gory jedno przeniesc
+//		for (int p = 17; p >= 0; p--) {
+//			UART_ReceivedRaw[p + 1] = UART_ReceivedRaw[p];
+//		}
+//		searching = 0;
+//	}
+	UART_MessageRecieved.ID = 0x01u;//UART_ReceivedRaw[1];
 
 	/*Zamiana hex w ACSII na liczbe*/
-
-	if (UART_ReceivedRaw[1] >= 65)
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[1] - 55) * 0x10;
-	else
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[1] - 48) * 0x10;
-
-	if (UART_ReceivedRaw[2] >= 65)
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[2] - 55);
-	else
-		UART_MessageRecieved.ID += (UART_ReceivedRaw[2] - 48);
-
-	uint8_t i = 3;
-	uint8_t index = 0;
-	while (i < 19 && UART_ReceivedRaw[i] != 88)		//x - end of transmission
+	if(UART_ReceivedRaw[0] == '#')
 	{
-		UART_MessageRecieved.data[index] = 0;
-		if (UART_ReceivedRaw[i] >= 65)
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 55)
-					* 0x10;
-		else
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 48)
-					* 0x10;
-		i++;
-		if (UART_ReceivedRaw[i] >= 65)
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 55);
-		else
-			UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 48);
-		i++;
-		index++;
+//		if (UART_ReceivedRaw[1] >= 65)
+//			UART_MessageRecieved.ID += (UART_ReceivedRaw[1] - 55) * 0x10;
+//		else
+//			UART_MessageRecieved.ID += (UART_ReceivedRaw[1] - 48) * 0x10;
+//
+//		if (UART_ReceivedRaw[2] >= 65)
+//			UART_MessageRecieved.ID += (UART_ReceivedRaw[2] - 55);
+//		else
+//			UART_MessageRecieved.ID += (UART_ReceivedRaw[2] - 48);
+
+//		uint8_t i = 3;
+//		uint8_t index = 0;
+//		while (i < 19 && UART_ReceivedRaw[i] != 88)		//x - end of transmission
+//		{
+//			UART_MessageRecieved.data[index] = 0;
+//			if (UART_ReceivedRaw[i] >= 65)
+//				UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 55)
+//						* 0x10;
+//			else
+//				UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 48)
+//						* 0x10;
+//			i++;
+//			if (UART_ReceivedRaw[i] >= 65)
+//				UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 55);
+//			else
+//				UART_MessageRecieved.data[index] += (UART_ReceivedRaw[i] - 48);
+//			i++;
+//			index++;
+//		}
+//		UART_MessageRecieved.lenght = index;
+
+		memset(&UART_MessageRecieved.data, 0x0u, 8);
+		UART_MessageRecieved.lenght = 8;
+		UART_MessageRecieved.data[0] = UART_ReceivedRaw[1];
+		UART_MessageRecieved.data[1] = UART_ReceivedRaw[2];
+		UART_MessageRecieved.data[2] = UART_ReceivedRaw[3];
+
+		memset(&UART_ReceivedRaw, 0x0u, 22);
 	}
-	UART_MessageRecieved.lenght = index;
 }
 
 void DMA_STR0_IRQHandler(void) {
