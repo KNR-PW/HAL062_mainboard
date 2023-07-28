@@ -17,10 +17,8 @@
 #include "error_handlers/error_handlers.h"
 
 
-
 void SystemClock_Config(void);
 
-//#define USE_HAL_UART_REGISTER_CALLBACKS
 
 void SysTick_Handler(void) {
 	static int work_led_cnt = 0;
