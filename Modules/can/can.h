@@ -8,9 +8,14 @@
 #ifndef MODULES_CAN_CAN_H_
 #define MODULES_CAN_CAN_H_
 
-void MX_FDCAN1_Init(void);
+void FDCAN2_Init(void);
+void FDCAN1_Init(void);
 
 void COM_LoadCommandList(void);
+void Can_testMessage(void);
+void transferToCan1(void);
+void transferToCan2(void);
+
 
 //void COM_RunCanAction();
 void COM_RunUartAction();

@@ -7,8 +7,14 @@
 bool Eth_Init();
 bool BT_Init();
 
+bool BT_sendData(char *ID, char *info);
+
 bool Eth_sendData(char *ID, char *info);
+
+void UART_Decode(uint8_t* rawMessage);
 
 bool Eth_ReceiveData();
 bool BT_ReceiveData() ;
+
+
 #endif // MODULE_ETH_ETH_H

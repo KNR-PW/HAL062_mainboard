@@ -26,27 +26,6 @@
  extern "C" {
 #endif
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
-
-/* USER CODE END ET */
-
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
-
-/* USER CODE END EC */
-
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
-
-/* USER CODE END EM */
-
-/* Exported functions prototypes ---------------------------------------------*/
 void NMI_Handler(void);
 void HardFault_Handler(void);
 void MemManage_Handler(void);
@@ -56,9 +35,11 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
+void FDCAN1_IT0_IRQHandler(void);
+void FDCAN2_IT0_IRQHandler(void);
+void FDCAN1_IT1_IRQHandler(void);
+void FDCAN2_IT1_IRQHandler(void);
+void FDCAN_CAL_IRQHandler(void);
 
 #ifdef __cplusplus
 }
