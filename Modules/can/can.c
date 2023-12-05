@@ -39,14 +39,14 @@ void FDCAN1_Init(void) {
 	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
-	hfdcan1.Init.NominalPrescaler = 40; // 0.5 Mhz
+	hfdcan1.Init.NominalPrescaler = 8; // 0.5 Mhz
 	hfdcan1.Init.NominalSyncJumpWidth = 1;
-	hfdcan1.Init.NominalTimeSeg1 = 9;
-	hfdcan1.Init.NominalTimeSeg2 = 8;
-	hfdcan1.Init.DataPrescaler = 40; // 0.5 MHz
+	hfdcan1.Init.NominalTimeSeg1 = 4;
+	hfdcan1.Init.NominalTimeSeg2 = 5;
+	hfdcan1.Init.DataPrescaler = 8; // 0.5 MHz
 	hfdcan1.Init.DataSyncJumpWidth = 1;
-	hfdcan1.Init.DataTimeSeg1 = 9;
-	hfdcan1.Init.DataTimeSeg2 = 8;
+	hfdcan1.Init.DataTimeSeg1 = 4;
+	hfdcan1.Init.DataTimeSeg2 = 5;
 	hfdcan1.Init.MessageRAMOffset = 0;
 	hfdcan1.Init.StdFiltersNbr = 1;
 	hfdcan1.Init.ExtFiltersNbr = 0;
@@ -203,8 +203,14 @@ void transferToCan1() {
 	TxHeader_CAN1.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader_CAN1.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
 
+	uint8_t dane[8];
+//	dane[0] = UART_MessageRecieved.ID;
+	for (int i = 0; i < 8; i++) {
+		dane[i] = UART_MessageRecieved.data[i];
+	}
+
 	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader_CAN1,
-			UART_MessageRecieved.data, FDCAN_TX_BUFFER0) != HAL_OK) {
+			dane, FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler();
 	}
 
@@ -217,7 +223,7 @@ void transferToCan1() {
 
 	/* Polling for transmission complete on buffer index 0 */
 	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1);
-	Leds_toggleLed(LED4);
+	Leds_toggleLed(LED5);
 }
 
 void transferToCan2() {

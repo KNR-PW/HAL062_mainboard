@@ -53,15 +53,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		UART_Decode(&UART_ReceivedRaw);
 		if (searching == 0) {
 			COM_RunUartAction(&UART_MessageRecieved);
-			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 19);
+			UART_MessageRecieved.ID = 0;
+			memset(&UART_MessageRecieved.data, 0x0u, 8);
+			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
 			return;
 		}
 		if (searching == 1) {
-			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 1);
+			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 1);
 			return;
 		}
 		if (searching == 2) {
-			HAL_UART_Receive_IT(&huart, UART_ReceivedRaw, 18);
+			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
 			return;
 		}
 
@@ -143,9 +145,9 @@ bool BT_Init() {
 
 
 
-//	HAL_UARTEx_SetRxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_8_8);
-//	HAL_UARTEx_SetTxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_8_8);
-//	HAL_UARTEx_EnableFifoMode(&btHuart);
+	HAL_UARTEx_SetRxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_1_8);
+	HAL_UARTEx_SetTxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_1_8);
+	HAL_UARTEx_EnableFifoMode(&btHuart);
 
 //
 //	HAL_UART_ReceiverTimeout_Config(&btHuart, 30u);
