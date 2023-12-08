@@ -31,7 +31,11 @@ int speed_right;
 
 void Error_Handler(void);
 
+
+// can na mani
 void FDCAN1_Init(void) {
+
+	FDCAN_FilterTypeDef sFilterConfig;
 
 	hfdcan1.Instance = FDCAN1;
 	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
@@ -88,6 +92,7 @@ void FDCAN1_Init(void) {
 
 }
 
+// szyna miedzyplytkowa
 void FDCAN2_Init(void) {
 
 	FDCAN_FilterTypeDef sFilterConfig;
@@ -150,26 +155,27 @@ void Can_testMessage(void) {
 	TxHeader_CAN1.Identifier = 0x01;
 	TxHeader_CAN1.IdType = FDCAN_STANDARD_ID;
 	TxHeader_CAN1.TxFrameType = FDCAN_DATA_FRAME;
-	TxHeader_CAN1.DataLength = FDCAN_DLC_BYTES_8;
+	TxHeader_CAN1.DataLength = FDCAN_DLC_BYTES_5;
 	TxHeader_CAN1.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	TxHeader_CAN1.BitRateSwitch = FDCAN_BRS_ON;
 	TxHeader_CAN1.FDFormat = FDCAN_CLASSIC_CAN;
 	TxHeader_CAN1.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader_CAN1.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
-	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan2, &TxHeader_CAN1,
-			TxData_Node1_To_Node2, FDCAN_TX_BUFFER0) != HAL_OK) {
-		Error_Handler();
-	}
+	uint8_t dane[] = {0, 1 ,0, 1, 0, 1, 0, 1};
+	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader_CAN1,
+				dane, FDCAN_TX_BUFFER0) != HAL_OK) {
+			Error_Handler();
+		}
 
-	hfdcan2.Instance->TXBAR = 0x1u;
+	hfdcan1.Instance->TXBAR = 0x1u;
 
 	/* Send Tx buffer message */
-	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan2, FDCAN_TX_BUFFER0) != HAL_OK) {
+	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan1, FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler();
 	}
 
 	/* Polling for transmission complete on buffer index 0 */
-	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan2, FDCAN_TX_BUFFER0) == 1)
+	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1)
 		;
 	Leds_toggleLed(LED4);
 }

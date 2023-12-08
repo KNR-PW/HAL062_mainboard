@@ -42,6 +42,8 @@ int main(void) {
 	/* Loop forever */
 
 	while (1) {
+		Can_testMessage();
+		HAL_Delay(100);
 //		BT_sendData(id, data);
 	}
 }
