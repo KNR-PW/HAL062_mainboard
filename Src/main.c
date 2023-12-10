@@ -9,7 +9,6 @@
 #include "ethernet/eth.h"
 
 #include <stm32h7xx_hal.h>
-//#include <stm32h7xx_hal_conf.h>
 #include <stdbool.h>
 
 #include "leds/leds.h"
@@ -27,23 +26,25 @@ int main(void) {
 	HAL_Init();
 	SystemClock_Config();
 
-	Leds_init();
-	Leds_welcomeFLash();
-
-	FDCAN1_Init();
-	FDCAN2_Init();
+	// TODO Uruchomić pozostałe peryferia
+//	Leds_init();
+//	Leds_welcomeFLash();
+//
+//	FDCAN1_Init();
+//	FDCAN2_Init();
 
 	Eth_Init();
-	Eth_ReceiveData();
+	//Eth_ReceiveData();
 
-	BT_Init();
-	BT_ReceiveData();
+//	BT_Init();
+//	BT_ReceiveData();
 
 	/* Loop forever */
 
 	while (1) {
-		Can_testMessage();
-		HAL_Delay(100);
+		ETH_Test();
+		//Can_testMessage();
+		//HAL_Delay(100);
 //		BT_sendData(id, data);
 	}
 }
