@@ -10,9 +10,7 @@ static GPIO_InitTypeDef ethGpio;
 static GPIO_InitTypeDef btGpio;
 
 uint8_t UART_ReceivedRaw[19];
-uint8_t searching = 0u;
 uint8_t magnetosearching = 0u;
-uint8_t tutaj = 0u;
 
 static uint32_t a = 0;
 
@@ -88,17 +86,41 @@ bool Eth_Init() {
 	return 0;
 }
 
-bool Eth_sendData(char *ID, char *info) {
-
-	uint8_t ethTxBuffer[19];
+bool Eth_sendData(MessageTypeDef* MessageToSend)
+{
+	static uint8_t ethTxBuffer[19];
 	ethTxBuffer[0] = '#';
-	for (uint8_t i = 0; i < 2; i++)
-		ethTxBuffer[i + 1] = ID[i];
 
-	for (uint8_t i = 0; i < 16; i++)
-		ethTxBuffer[i + 3] = info[i];
+	ethTxBuffer[1] = (MessageToSend->ID & 0xF0) >> 4;
+	ethTxBuffer[2] = MessageToSend->ID & 0x0F;
 
-	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, 1000) == HAL_OK) {
+	for(uint8_t i = 0; i < 8; i++)
+	{
+		if(i >= MessageToSend->lenght)
+		{
+			ethTxBuffer[2*i + 3] = 'x';
+			ethTxBuffer[2*i + 4] = 'x';
+		}
+		else
+		{
+			ethTxBuffer[2*i + 3] = (MessageToSend->data[i] & 0xF0) >> 4;
+			ethTxBuffer[2*i + 4] = MessageToSend->data[i] & 0x0F;
+		}
+	}
+
+	for(uint8_t i = 1; i < 19; i++)
+	{
+		if(ethTxBuffer[i] >= 0 && ethTxBuffer[i] <= 9)
+		{
+			ethTxBuffer[i] += '0';
+		}
+		else if(ethTxBuffer[i] >= 0x0A && ethTxBuffer[i] <= 0x0F)
+		{
+			ethTxBuffer[i] = ethTxBuffer[i] - 0x0A + 'A';
+		}
+	}
+
+	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, HAL_MAX_DELAY) == HAL_OK) {
 		return 0;
 	}
 	return 1;
@@ -106,18 +128,42 @@ bool Eth_sendData(char *ID, char *info) {
 
 bool BT_sendData(char *ID, char *info) {
 
-	uint8_t btTxBuffer[19];
+	static uint8_t btTxBuffer[19];
 	btTxBuffer[0] = '#';
-	for (uint8_t i = 0; i < 2; i++)
-		btTxBuffer[i + 1] = ID[i];
 
-	for (uint8_t i = 0; i < 16; i++)
-		btTxBuffer[i + 3] = info[i];
+	btTxBuffer[1] = (MessageToSend->ID & 0xF0) >> 4;
+	btTxBuffer[2] = MessageToSend->ID & 0x0F;
 
-	if (HAL_UART_Transmit(&btHuart, btTxBuffer, 19, 1000) == HAL_OK) {
+	for(uint8_t i = 0; i < 8; i++)
+	{
+		if(i >= MessageToSend->lenght)
+		{
+			btTxBuffer[2*i + 3] = 'x';
+			btTxBuffer[2*i + 4] = 'x';
+		}
+		else
+		{
+			btTxBuffer[2*i + 3] = (MessageToSend->data[i] & 0xF0) >> 4;
+			btTxBuffer[2*i + 4] = MessageToSend->data[i] & 0x0F;
+		}
+	}
+
+	for(uint8_t i = 1; i < 19; i++)
+	{
+		if(btTxBuffer[i] >= 0 && btTxBuffer[i] <= 9)
+		{
+			btTxBuffer[i] += '0';
+		}
+		else if(btTxBuffer[i] >= 0x0A && btTxBuffer[i] <= 0x0F)
+		{
+			btTxBuffer[i] = btTxBuffer[i] - 0x0A + 'A';
+		}
+	}
+
+	if (HAL_UART_Transmit(&ethHuart, btTxBuffer, 19, HAL_MAX_DELAY) == HAL_OK) {
 		return 0;
 	}
-	return 1;
+		return 1;
 }
 
 bool BT_ReceiveData() {
@@ -138,15 +184,16 @@ void ETH_Test(void)
 	uint8_t *raw = "#55123456789ABCDEFA";
 	HAL_StatusTypeDef ret;
 
+	MessageTypeDef exampl_mess = {0xFA, 8, {0xA1, 0x2B, 0xC3, 0x4D, 0xE5, 0x6F, 7, 8}};
+	Eth_sendData(&exampl_mess);
+
 	Eth_ReceiveData();
 	while(1)
 	{
-		//ret = HAL_UART_Transmit(&ethHuart, msg, 9, HAL_MAX_DELAY);
 		HAL_Delay(500);
 	}
 
 }
-
 
 void UART_Decode(uint8_t* rawMessage) {
 
@@ -182,60 +229,6 @@ void UART_Decode(uint8_t* rawMessage) {
 		index++;
 	}
 	UART_MessageRecieved.lenght = index;
-
-	asm("nop");
-//	/*Test czy pierwszy jest # by sie przydal*/
-//	if (rawMessage[0] != '#' && searching != 2) {
-//		searching = 1;
-//		return;
-//	}
-//	if (rawMessage[0] != '#' && searching == 1) {
-//		searching = 2;
-//		tutaj = 1;
-//		return;
-//	}
-//	if (searching == 2) {
-//		//nie ma '#' w tym wiec trzeba do gory jedno przeniesc
-//		for (int p = 17; p >= 0; p--) {
-//			rawMessage[p + 1] = rawMessage[p];
-//		}
-//		searching = 0;
-//	}
-//
-//	/*Zamiana hex w ACSII na liczbe*/
-//	if(rawMessage[0] == '#')
-//	{
-//		if (rawMessage[1] >= 65)
-//			UART_MessageRecieved.ID += (rawMessage[1] - 55) * 0x10;
-//		else
-//			UART_MessageRecieved.ID += (rawMessage[1] - 48) * 0x10;
-//
-//		if (rawMessage[2] >= 65)
-//			UART_MessageRecieved.ID += (rawMessage[2] - 55);
-//		else
-//			UART_MessageRecieved.ID += (rawMessage[2] - 48);
-//
-//		uint8_t i = 3;
-//		uint8_t index = 0;
-//		while (i < 19 && rawMessage[i] != 88)		//x - end of transmission
-//		{
-//			UART_MessageRecieved.data[index] = 0;
-//			if (rawMessage[i] >= 65)
-//				UART_MessageRecieved.data[index] += (rawMessage[i] - 55)
-//						* 0x10;
-//			else
-//				UART_MessageRecieved.data[index] += (rawMessage[i] - 48)
-//						* 0x10;
-//			i++;
-//			if (rawMessage[i] >= 65)
-//				UART_MessageRecieved.data[index] += (rawMessage[i] - 55);
-//			else
-//				UART_MessageRecieved.data[index] += (rawMessage[i] - 48);
-//			i++;
-//			index++;
-//		}
-//		UART_MessageRecieved.lenght = index;
-//	}
 }
 
 void USART1_IRQHandler() {
@@ -247,49 +240,18 @@ void USART3_IRQHandler() {
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-//
-//	if (huart->Instance == USART1) {
-//		UART_Decode(&UART_ReceivedRaw);
-//		if (searching == 0) {
-//			COM_RunUartAction(&UART_MessageRecieved);
-//			UART_MessageRecieved.ID = 0;
-//			memset(&UART_MessageRecieved.data, 0x0u, 8);
-//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
-//			return;
-//		}
-//		if (searching == 1) {
-//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 1);
-//			return;
-//		}
-//		if (searching == 2) {
-//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
-//			return;
-//		}
-//	}
-//	else if(huart->Instance == USART3)
-//	{
-//		UART_Decode(&UART_ReceivedRaw);
-//		if (searching == 0) {
-//			COM_RunUartAction(&UART_MessageRecieved);
-//			UART_MessageRecieved.ID = 0;
-//			memset(&UART_MessageRecieved.data, 0x0u, 8);
-//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
-//			return;
-//		}
-//		if (searching == 1) {
-//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 1);
-//			return;
-//		}
-//		if (searching == 2) {
-//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
-//			return;
-//		}
-//	}
-
 	if(huart->Instance == USART1)
 	{
 		UART_Decode(&UART_ReceivedRaw);
 		if(Eth_ReceiveData() != 0)
+		{
+			HAL_UART_ErrorCallback(&huart);
+		}
+	}
+	else if(huart->Instance == USART3)
+	{
+		UART_Decode(&UART_ReceivedRaw);
+		if(Bt_ReceiveData() != 0)
 		{
 			HAL_UART_ErrorCallback(&huart);
 		}
