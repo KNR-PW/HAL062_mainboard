@@ -50,6 +50,14 @@ bool BT_Init() {
 }
 
 bool Eth_Init() {
+
+	GPIO_InitTypeDef gpio;
+
+	gpio.Pin = GPIO_PIN_14;
+	gpio.Mode = GPIO_MODE_OUTPUT_PP;
+	gpio.Pull = GPIO_NOPULL;
+	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 9600;
 	ethHuart.Init.WordLength = UART_WORDLENGTH_8B;
@@ -74,6 +82,7 @@ bool Eth_Init() {
 	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
 	//HAL_GPIO_Init(GPIOA, &ethGpio);
 	HAL_GPIO_Init(GPIOB, &ethGpio);
+	HAL_GPIO_Init(GPIOB, &gpio);
 
 	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -126,7 +135,7 @@ bool Eth_sendData(MessageTypeDef* MessageToSend)
 	return 1;
 }
 
-bool BT_sendData(char *ID, char *info) {
+bool BT_sendData(MessageTypeDef* MessageToSend) {
 
 	static uint8_t btTxBuffer[19];
 	btTxBuffer[0] = '#';
@@ -180,26 +189,35 @@ bool Eth_ReceiveData() {
 
 void ETH_Test(void)
 {
-	char *msg = "Gajo Jajo";
-	uint8_t *raw = "#55123456789ABCDEFA";
-	HAL_StatusTypeDef ret;
-
-	MessageTypeDef exampl_mess = {0xFA, 8, {0xA1, 0x2B, 0xC3, 0x4D, 0xE5, 0x6F, 7, 8}};
-	Eth_sendData(&exampl_mess);
+//	Wysyłanie działa nie ma co do gadania
+//	MessageTypeDef exampl_mess = {0xf7, 8, {0xA1, 0x2B, 0xC3, 0x4D, 0xE5, 0x6F, 7, 8}};
+//	Eth_sendData(&exampl_mess);
 
 	Eth_ReceiveData();
 	while(1)
 	{
-		HAL_Delay(500);
+		if(UART_MessageRecieved.ID == 1)
+		{
+			if(UART_MessageRecieved.data[0] != 0)
+			{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+			}
+			else
+			{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+			}
+		}
 	}
 
 }
 
 void UART_Decode(uint8_t* rawMessage) {
 
-	// TODO: Dodać sprawdzanie czy użyto wielkie czy małe litery
 	if(rawMessage[0] != '#')
 		return;
+
+	UART_MessageRecieved.ID = 0;
+	memset(UART_MessageRecieved.data, 0, 8);
 
 	if (rawMessage[1] >= 65)
 		UART_MessageRecieved.ID += (rawMessage[1] - 55) * 0x10;
@@ -215,7 +233,6 @@ void UART_Decode(uint8_t* rawMessage) {
 	uint8_t index = 0;
 	while (i < 19 && rawMessage[i] != 88)		//x - end of transmission
 	{
-		UART_MessageRecieved.data[index] = 0;
 		if (rawMessage[i] >= 65)
 			UART_MessageRecieved.data[index] += (rawMessage[i] - 55) * 0x10;
 		else
@@ -242,7 +259,7 @@ void USART3_IRQHandler() {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if(huart->Instance == USART1)
 	{
-		UART_Decode(&UART_ReceivedRaw);
+		UART_Decode(UART_ReceivedRaw);
 		if(Eth_ReceiveData() != 0)
 		{
 			HAL_UART_ErrorCallback(&huart);
@@ -250,8 +267,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	}
 	else if(huart->Instance == USART3)
 	{
-		UART_Decode(&UART_ReceivedRaw);
-		if(Bt_ReceiveData() != 0)
+		UART_Decode(UART_ReceivedRaw);
+		if(BT_ReceiveData() != 0)
 		{
 			HAL_UART_ErrorCallback(&huart);
 		}

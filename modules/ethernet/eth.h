@@ -8,8 +8,7 @@
 bool Eth_Init();
 bool BT_Init();
 
-bool BT_sendData(char *ID, char *info);
-//bool Eth_sendData(char *ID, char *info);
+bool BT_sendData(MessageTypeDef* MessageToSend);
 bool Eth_sendData(MessageTypeDef* MessageToSend);
 void UART_Decode(uint8_t* rawMessage);
 
