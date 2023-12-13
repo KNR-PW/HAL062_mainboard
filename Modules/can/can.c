@@ -1,20 +1,29 @@
-/* Includes ------------------------------------------------------------------*/
+/**
+ ******************************************************************************
+ * @file           : can.c
+ * @author         : Jacek Prokopczuk, Krystian Czechowicz, Adam Rybojad
+ * @brief          : Function prototypes for CAN protocol.
+ ******************************************************************************
+ */
 
-#include <stm32h7xx_hal_gpio.h>
-#include <stm32h7xx_hal_cortex.h>
-#include <stm32h7xx_hal_rcc.h>
-#include <stm32h7xx_hal_fdcan.h>
 #include <stm32h7xx_hal.h>
-
 #include <string.h>
 
 #include "leds/leds.h"
 #include "can/can.h"
 #include "error_handlers/error_handlers.h"
 
-FDCAN_FilterTypeDef sFilterConfig;
+/**
+ * @brief Header type for transmitting data to manipulator board.
+ */
 FDCAN_TxHeaderTypeDef TxHeader_CAN1;
+
+/**
+ * @brief Header type for transmitting data to other driver boards.
+ */
 FDCAN_TxHeaderTypeDef TxHeader_CAN2;
+
+/* UNUSED */
 FDCAN_RxHeaderTypeDef RxHeader;
 uint8_t TxData_Node1_To_Node2[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB,
 		0xFC };
@@ -22,135 +31,16 @@ uint8_t RxData_From_Node2[12];
 
 static MessageTypeDef UART_MessageRecieved;
 
-FDCAN_HandleTypeDef hfdcan1;
-FDCAN_HandleTypeDef hfdcan2;
+extern FDCAN_HandleTypeDef hfdcan1;
+extern FDCAN_HandleTypeDef hfdcan2;
 
 command commandList[150];
 int speed_left;
 int speed_right;
 
-void Error_Handler(void);
-
-
-// can na mani
-void FDCAN1_Init(void) {
-
-	FDCAN_FilterTypeDef sFilterConfig;
-
-	hfdcan1.Instance = FDCAN1;
-	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
-	hfdcan1.Init.AutoRetransmission = DISABLE;
-	hfdcan1.Init.TransmitPause = DISABLE;
-	hfdcan1.Init.ProtocolException = DISABLE;
-	hfdcan1.Init.NominalPrescaler = 8; // 0.5 Mhz
-	hfdcan1.Init.NominalSyncJumpWidth = 1;
-	hfdcan1.Init.NominalTimeSeg1 = 4;
-	hfdcan1.Init.NominalTimeSeg2 = 5;
-	hfdcan1.Init.DataPrescaler = 8; // 0.5 MHz
-	hfdcan1.Init.DataSyncJumpWidth = 1;
-	hfdcan1.Init.DataTimeSeg1 = 4;
-	hfdcan1.Init.DataTimeSeg2 = 5;
-	hfdcan1.Init.MessageRAMOffset = 0;
-	hfdcan1.Init.StdFiltersNbr = 1;
-	hfdcan1.Init.ExtFiltersNbr = 0;
-	hfdcan1.Init.RxFifo0ElmtsNbr = 0;
-	hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan1.Init.RxFifo1ElmtsNbr = 0;
-	hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan1.Init.RxBuffersNbr = 1;
-	hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
-	hfdcan1.Init.TxEventsNbr = 0;
-	hfdcan1.Init.TxBuffersNbr = 1;
-	hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
-	hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-	hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-	if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK) {
-		Error_Handler();
-	}
-
-	/* Configure standard ID reception filter to Rx buffer 0 */
-	sFilterConfig.IdType = FDCAN_STANDARD_ID;
-	sFilterConfig.FilterIndex = 0;
-#if 0
-  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x2; // ID Node2
-#if 0
-  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.RxBufferIndex = 0;
-	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK) {
-		Error_Handler();
-	}
-
-	/* Start the FDCAN module */
-	if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
-		Error_Handler();
-	}
-
-}
-
-// szyna miedzyplytkowa
-void FDCAN2_Init(void) {
-
-	FDCAN_FilterTypeDef sFilterConfig;
-
-	hfdcan2.Instance = FDCAN2;
-	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
-	hfdcan2.Init.AutoRetransmission = DISABLE;
-	hfdcan2.Init.TransmitPause = DISABLE;
-	hfdcan2.Init.ProtocolException = DISABLE;
-	hfdcan2.Init.NominalPrescaler = 40; // 0.5 Mhz
-	hfdcan2.Init.NominalSyncJumpWidth = 1;
-	hfdcan2.Init.NominalTimeSeg1 = 9;
-	hfdcan2.Init.NominalTimeSeg2 = 8;
-	hfdcan2.Init.DataPrescaler = 40; // 0.5 MHz
-	hfdcan2.Init.DataSyncJumpWidth = 1;
-	hfdcan2.Init.DataTimeSeg1 = 9;
-	hfdcan2.Init.DataTimeSeg2 = 8;
-	hfdcan2.Init.MessageRAMOffset = 0;
-	hfdcan2.Init.StdFiltersNbr = 1;
-	hfdcan2.Init.ExtFiltersNbr = 0;
-	hfdcan2.Init.RxFifo0ElmtsNbr = 0;
-	hfdcan2.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan2.Init.RxFifo1ElmtsNbr = 0;
-	hfdcan2.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan2.Init.RxBuffersNbr = 1;
-	hfdcan2.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
-	hfdcan2.Init.TxEventsNbr = 0;
-	hfdcan2.Init.TxBuffersNbr = 1;
-	hfdcan2.Init.TxFifoQueueElmtsNbr = 0;
-	hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-	hfdcan2.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-	if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK) {
-		Error_Handler();
-	}
-
-	/* Configure standard ID reception filter to Rx buffer 0 */
-	sFilterConfig.IdType = FDCAN_STANDARD_ID;
-	sFilterConfig.FilterIndex = 0;
-#if 0
-  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x2; // ID Node2
-#if 0
-  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.RxBufferIndex = 0;
-	if (HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig) != HAL_OK) {
-		Error_Handler();
-	}
-
-	/* Start the FDCAN module */
-	if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
-		Error_Handler();
-	}
-}
-
+/**
+ * @brief Sets dummy message for testing CAN to manipulator
+ */
 void Can_testMessage(void) {
 	TxHeader_CAN1.Identifier = 0x01;
 	TxHeader_CAN1.IdType = FDCAN_STANDARD_ID;
@@ -167,6 +57,7 @@ void Can_testMessage(void) {
 			Error_Handler();
 		}
 
+	/* Sets FDCAN Tx Buffer Add Request register */
 	hfdcan1.Instance->TXBAR = 0x1u;
 
 	/* Send Tx buffer message */
@@ -177,27 +68,49 @@ void Can_testMessage(void) {
 	/* Polling for transmission complete on buffer index 0 */
 	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1)
 		;
+
+	/* Toggle blue LED4 after sending CAN message*/
 	Leds_toggleLed(LED4);
 }
 
 
-void transferTo() {
+/**
+ * @brief Handles received UART message from ethernet (either bluetooth or Wi-Fi)
+ * @note  After this function, ID attribue is NOT used and is NOT sent to CAN bus
+ */
+void transferTo(void) {
+	/* If ID is between 0 and 128 it shall be a message to other driver boards*/
 	if (UART_MessageRecieved.ID > 0 && UART_MessageRecieved.ID < 128)
 		transferToCan2();
+
+	/* If ID is between 127 and 256 it shall be a message to manipulator boards*/
 	else if (UART_MessageRecieved.ID > 127 && UART_MessageRecieved.ID < 256)
 		transferToCan1();
 	return;
 }
 
-
+/**
+ * @brief Function called in HAL_UART_RxCpltCallback(),
+ * 		  handles received message and sets parameters of
+ * 		  local static UART_MessageRecieved variable
+ * @note  UART_MessageRecieved is also declared in eth file,
+ * 		  but as volatile static.
+ */
 void COM_RunUartAction(MessageTypeDef *message) {
 	UART_MessageRecieved.ID = message->ID;
+
+	/* memcpy() func is more efficient than assigning all 8 elements of data array */
 	memcpy(UART_MessageRecieved.data, message->data, 8);
 	UART_MessageRecieved.lenght = message->lenght;
+
+	/* Calls function handling CAN buses */
 	transferTo();
 }
 
-
+/**
+ * @brief Initializes TxHeader for CAN1 (manipulator) bus and assigns
+ * 		  data from received UART message.
+ */
 void transferToCan1() {
 	TxHeader_CAN1.Identifier = UART_MessageRecieved.ID;
 	TxHeader_CAN1.IdType = FDCAN_STANDARD_ID;
@@ -209,17 +122,21 @@ void transferToCan1() {
 	TxHeader_CAN1.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader_CAN1.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
 
+	/* Use memcpy rather than for loop to assign UART values to transfer data */
 	uint8_t dane[8];
-//	dane[0] = UART_MessageRecieved.ID;
-	for (int i = 0; i < 8; i++) {
-		dane[i] = UART_MessageRecieved.data[i];
-	}
+	memcpy(dane, UART_MessageRecieved.data, 8);
+//	uint8_t dane[8];
+//	for (int i = 0; i < 8; i++) {
+//		dane[i] = UART_MessageRecieved.data[i];
+//	}
 
+	/* Add data to CAN buffer */
 	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader_CAN1,
 			dane, FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler();
 	}
 
+	/* Sets FDCAN Tx Buffer Add Request register */
 	hfdcan1.Instance->TXBAR = 0x1u;
 
 	/* Send Tx buffer message */
@@ -229,7 +146,9 @@ void transferToCan1() {
 
 	/* Polling for transmission complete on buffer index 0 */
 	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1);
-	Leds_toggleLed(LED5);
+
+	/* Toggle LED5 after sending CAN message*/
+	Leds_toggleLed(LED4);
 }
 
 void transferToCan2() {
@@ -243,17 +162,21 @@ void transferToCan2() {
 	TxHeader_CAN2.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader_CAN2.MessageMarker = 0x0; // Ignore because FDCAN_NO_TX_EVENTS
 
+	/* Use memcpy rather than for loop to assign UART values to transfer data */
 	uint8_t dane[8];
+	memcpy(dane, UART_MessageRecieved.data, 8);
 //	dane[0] = UART_MessageRecieved.ID;
-	for (int i = 0; i < 8; i++) {
-		dane[i] = UART_MessageRecieved.data[i];
-	}
+//	for (int i = 0; i < 8; i++) {
+//		dane[i] = UART_MessageRecieved.data[i];
+//	}
 
+	/* Add data to CAN buffer */
 	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan2, &TxHeader_CAN2, dane,
 			FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler();
 	}
 
+	/* Sets FDCAN Tx Buffer Add Request register */
 	hfdcan2.Instance->TXBAR = 0x1u;
 
 	/* Send Tx buffer message */
@@ -264,14 +187,17 @@ void transferToCan2() {
 	/* Polling for transmission complete on buffer index 0 */
 	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan2, FDCAN_TX_BUFFER0) == 1)
 		;
-	Leds_toggleLed(LED4);
+	/* Toggle LED5 after sending CAN message to other boards */
+	Leds_toggleLed(LED5);
 
 }
 
+/* TODO */
 void ignoreCAN() {
 	return;
 }
 
+/* TODO */
 void ignoreUART() {
 	return;
 }

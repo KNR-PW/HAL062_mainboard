@@ -1,10 +1,4 @@
-//#include <stm32h7xx_hal_gpio.h>
-//#include <stm32h7xx_hal_rcc.h>
-//#include <stm32h7xx_hal_rcc_ex.h>
-//#include <stm32h7xx_hal_cortex.h>
-//#include <stm32h7xx_hal_uart.h>
 #include <stm32h7xx_hal.h>
-//#include <stm32h7xx_hal_def.h>
 
 #include "ethernet/eth.h"
 #include "can/can.h"

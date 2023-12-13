@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #include "leds/leds.h"
+#include "can/can_init.h"
 #include "can/can.h"
 #include "error_handlers/error_handlers.h"
 
