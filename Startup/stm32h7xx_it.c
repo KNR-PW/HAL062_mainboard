@@ -5,6 +5,14 @@
 #include "leds/leds.h"
 #include "can/can.h"
 
+extern UART_HandleTypeDef ethHuart;
+extern UART_HandleTypeDef btHuart;
+extern DMA_HandleTypeDef hdma_usart3_rx;
+extern DMA_HandleTypeDef hdma_usart3_tx;
+
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart1_tx;
+
 extern FDCAN_HandleTypeDef hfdcan2;
 extern FDCAN_HandleTypeDef hfdcan1;
 
@@ -98,4 +106,42 @@ void FDCAN_CAL_IRQHandler(void) {
 	HAL_FDCAN_IRQHandler(&hfdcan2);
 	HAL_FDCAN_IRQHandler(&hfdcan1);
 
+}
+
+void USART1_IRQHandler() {
+	HAL_UART_IRQHandler(&ethHuart);
+}
+
+void USART3_IRQHandler() {
+	HAL_UART_IRQHandler(&btHuart);
+}
+
+
+/*****************************************************/
+/* POTENCJALNY BUG TODO */
+
+void DMA_STR0_IRQHandler(void) {
+
+	HAL_DMA_IRQHandler(&hdma_usart1_rx);
+
+	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx,
+			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
+
+	HAL_DMA_IRQHandler(&hdma_usart3_rx);
+
+		__HAL_DMA_CLEAR_FLAG(&hdma_usart3_rx,
+				__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart3_rx));
+}
+
+void DMA_STR1_IRQHandler(void) {
+
+	HAL_DMA_IRQHandler(&hdma_usart3_tx);
+
+	__HAL_DMA_CLEAR_FLAG(&hdma_usart3_tx,
+			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart3_tx));
+
+	HAL_DMA_IRQHandler(&hdma_usart1_tx);
+
+		__HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx,
+				__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_tx));
 }

@@ -5,12 +5,13 @@
  * @brief          : Main program body
  ******************************************************************************
  */
-#include <stdbool.h>
-#include "ethernet/eth.h"
+//#include <stdbool.h>
+#include "ethernet/eth_init.h"
+//#include "ethernet/eth.h"
 
 #include <stm32h7xx_hal.h>
 //#include <stm32h7xx_hal_conf.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 
 #include "leds/leds.h"
 #include "can/can_init.h"

@@ -4,9 +4,6 @@
 #include <stm32h7xx_hal.h>
 #include <stdbool.h>
 
-bool Eth_Init();
-bool BT_Init();
-
 bool BT_sendData(char *ID, char *info);
 
 bool Eth_sendData(char *ID, char *info);

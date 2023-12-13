@@ -1,4 +1,3 @@
-
 #ifndef MODULES_CAN_CAN_H_
 #define MODULES_CAN_CAN_H_
 
