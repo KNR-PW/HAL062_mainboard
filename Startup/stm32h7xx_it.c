@@ -4,9 +4,12 @@
 
 #include "leds/leds.h"
 #include "can/can.h"
+#include "communication/communication.h"
 
 extern FDCAN_HandleTypeDef hfdcan2;
 extern FDCAN_HandleTypeDef hfdcan1;
+extern UART_HandleTypeDef ethHuart;
+extern UART_HandleTypeDef btHuart;
 
 void NMI_Handler(void) {
 	while (1) {
@@ -99,3 +102,13 @@ void FDCAN_CAL_IRQHandler(void) {
 	HAL_FDCAN_IRQHandler(&hfdcan1);
 
 }
+
+void USART1_IRQHandler() {
+	HAL_UART_IRQHandler(&ethHuart);
+}
+
+void USART3_IRQHandler() {
+	HAL_UART_IRQHandler(&btHuart);
+}
+
+

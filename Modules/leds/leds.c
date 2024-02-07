@@ -6,14 +6,23 @@
  ******************************************************************************
  */
 
+/* Includes ------------------------------------------------------------------*/
 
-#include <stm32h7xx_hal.h> // Simple HAL delay
+#include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_rcc.h>
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal.h>
-
 #include "leds/leds.h"
 
+
+/* Functions ------------------------------------------------------------------*/
+
+/*
+ * ***************************************************
+ * @ details	:	Initialization of GPIO pins that
+ * 					are predefined in mainboard PCB
+ * ***************************************************
+ */
 void Leds_init(void) {
 	GPIO_InitTypeDef gpio;
 	__HAL_RCC_GPIOG_CLK_ENABLE();
@@ -24,6 +33,12 @@ void Leds_init(void) {
 	HAL_GPIO_Init(GPIOG, &gpio);
 }
 
+/*
+ * ***************************************************
+ * @ details	:	High level led turning on, using
+ * 					only predefined macros
+ * ***************************************************
+ */
 void Leds_turnOnLed(Leds_ID ledId) {
 	switch (ledId) {
 	case LED1:
@@ -44,6 +59,12 @@ void Leds_turnOnLed(Leds_ID ledId) {
 	}
 }
 
+/*
+ * ***************************************************
+ * @ details	:	High level led turning off, using
+ * 					only predefined macros
+ * ***************************************************
+ */
 void Leds_turnOffLed(Leds_ID ledId) {
 	switch (ledId) {
 	case LED1:
@@ -64,11 +85,21 @@ void Leds_turnOffLed(Leds_ID ledId) {
 	}
 }
 
+/*
+* *************************************************************
+* @ details	:	Turning off all LED. Used in Leds_welcomeFLash
+* *************************************************************
+*/
 void Leds_turnOffAllLeds(void) {
 	uint32_t reg = LED_1 | LED_2 | LED_3 | LED_4 | LED_5;
 	HAL_GPIO_WritePin(LEDS_PORT, reg, 0u);
 }
 
+/*
+* *****************************************************
+* @ details	:	Toggling LED using predefined macro
+* *****************************************************
+*/
 void Leds_toggleLed(Leds_ID ledId) {
 	switch (ledId) {
 	case LED1:
@@ -89,6 +120,13 @@ void Leds_toggleLed(Leds_ID ledId) {
 	}
 }
 
+
+/*
+* *****************************************************
+* @ details	:	Function used to check LEDs performing
+* 				called at the beginning of program.
+* *****************************************************
+*/
 void Leds_welcomeFLash(void) {
 	Leds_turnOnLed(LED1);
 	Leds_turnOnLed(LED2);
