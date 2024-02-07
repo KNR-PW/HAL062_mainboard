@@ -1,78 +1,81 @@
 /**
  ******************************************************************************
- * @file           : can.h
- * @author         : Jacek, Prokopczuk, Krystian Czechowicz, Adam Rybojad
- * @brief          : Functionality of communication threw CAN
+ * @file          	: communication.h
+ * @author        	: Krystian Czechowicz, Adam Rybojad
+ * @brief         	: Wireless communications functionality
+ * @details			: This file contains both ethernet and bluetooth
+ * 					  UART configuration. To undarstad it is required to see
+ * 					  frame documentation. (You can see in communication.c)
  ******************************************************************************
  */
 
-#ifndef MODULES_CAN_CAN_H_
-#define MODULES_CAN_CAN_H_
 
-/* Structures ------------------------------------------------------------------*/
+#ifndef MODULE_COMMUNICATION_COMMUNICATION_H
+#define MODULE_COMMUNICATION_COMMUNICATION_H
 
-/**
- * *******************************************************************************
- * @brief		:	structure representing message FRAME passed to CAN
- * *******************************************************************************
- */
-typedef struct {
-	uint8_t ID;
-	uint8_t lenght;
-	uint8_t data[8];
-} MessageTypeDef;
+
+/* Includes ------------------------------------------------------------------*/
+
+#include <stm32h7xx_hal.h>
+#include <stdbool.h>
 
 
 /* Functions ------------------------------------------------------------------*/
 
 /**
  * *******************************************************************************
- * @brief		:	CAN1 initialization - outside (manipulator/lab)
+ * @brief	:	UART ethernet initialization
  * *******************************************************************************
- */
-void FDCAN1_Init(void);
+*/
+bool Eth_Init();
+
 
 /**
  * *******************************************************************************
- * @brief		:	CAN2 initialization - rail (motorboards/sensorboards)
+ * @brief	:	UART bluetooth initialization
  * *******************************************************************************
- */
-void FDCAN2_Init(void);
+*/
+bool BT_Init();
 
 /**
  * *******************************************************************************
- * @brief		:	Send test message via CAN1
+ * @brief		:	Sending data threw bluetooth
+ * @params ID	:	ID of data (check frame documentation)
+ * @params info	:	Information to send (check frame documentation)
  * *******************************************************************************
- */
-void Can_testMessage(void);
+*/
+bool BT_sendData(char *ID, char *info);
 
 /**
  * *******************************************************************************
- * @brief		:	Saves message to data struct, and calls transferTo function,
- * 					which pass message to appropriate CAN
+ * @brief		:	Sending data threw ethernet
+ * @params ID	:	ID of data (check frame documentation)
+ * @params info	:	Information to send (check frame documentation)
  * *******************************************************************************
- */
-void COM_RunUartAction(MessageTypeDef *message);
+*/
+bool Eth_sendData(char *ID, char *info);
 
 /**
  * *******************************************************************************
- * @brief		:	Checks ID of message and pass to CAN1 or CAN2
+ * @brief				:	Decoding data from UART
+ * @params rawMessage	:	message from UART (bt or eth)
  * *******************************************************************************
- */
-void transferTo(void);
+*/
+void UART_Decode(uint8_t* rawMessage);
 
 /**
  * *******************************************************************************
- * @brief		:	Passing message from UART to CAN1
+ * @brief				:	Begin listening on ethernet UART
  * *******************************************************************************
- */
-void transferToCan1(void);
+*/
+bool Eth_ReceiveData();
 
 /**
  * *******************************************************************************
- * @brief		:	Passing message from UART to CAN2
+ * @brief				:	Begin listening on bluetooth UART
  * *******************************************************************************
- */
-void transferToCan2(void);
+*/
+bool BT_ReceiveData() ;
 
-#endif /* MODULES_CAN_CAN_H_ */
+
+#endif // MODULE_COMMUNICATION_COMMUNICATION_H

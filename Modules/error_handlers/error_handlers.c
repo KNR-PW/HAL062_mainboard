@@ -1,16 +1,27 @@
 /**
  ******************************************************************************
- * @file           : main.c
- * @author         : J. Prokopczuk
- * @brief          : Main program body
+ * @file           : error_handlers.c
+ * @author         : Jacek Prokopczuk, Krystian Czechowicz, Adam Rybojad
+ * @brief          : Handling all errors that is detected TODO
  ******************************************************************************
  */
 
-#include <stm32h7xx_hal.h>
 
+/* Includes ------------------------------------------------------------------- */
+
+#include <stm32h7xx_hal.h>
 #include "error_handlers/error_handlers.h"
 #include "leds/leds.h"
 
+
+/* Functions ------------------------------------------------------------------- */
+
+
+/**
+ ******************************************************************************
+ * @details			:	Error handling - turn off leds and while loop
+ ******************************************************************************
+ */
 void Error_Handler(void) {
 	/// TODO: FInish Error handler!
 	__disable_irq();
