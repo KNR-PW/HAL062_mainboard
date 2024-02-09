@@ -26,17 +26,16 @@ int main(void) {
 	HAL_Init();
 	SystemClock_Config();
 
-	// TODO Uruchomić pozostałe peryferia
-//	Leds_init();
-//	Leds_welcomeFLash();
-//
-//	FDCAN1_Init();
-//	FDCAN2_Init();
+	Leds_init();
+	Leds_welcomeFLash();
 
-	//Eth_ReceiveData();
+	FDCAN1_Init();
+	FDCAN2_Init();
 
-//	BT_Init();
-//	BT_ReceiveData();
+	Eth_ReceiveData();
+
+	BT_Init();
+	BT_ReceiveData();
 
 	Eth_Init();
 	ETH_Test();
@@ -44,9 +43,7 @@ int main(void) {
 	/* Loop forever */
 
 	while (1) {
-		//Can_testMessage();
-		//HAL_Delay(100);
-//		BT_sendData(id, data);
+
 	}
 }
 

@@ -12,9 +12,6 @@ bool BT_sendData(MessageTypeDef* MessageToSend);
 bool Eth_sendData(MessageTypeDef* MessageToSend);
 void UART_Decode(uint8_t* rawMessage);
 
-// TODO: Usunąć - tylko do celów testowych
-void ETH_Test(void);
-
 bool Eth_ReceiveData();
 bool BT_ReceiveData() ;
 

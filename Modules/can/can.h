@@ -16,7 +16,6 @@ void Can_testMessage(void);
 void transferToCan1(void);
 void transferToCan2(void);
 
-
 //void COM_RunCanAction();
 void COM_RunUartAction();
 void sendTest();

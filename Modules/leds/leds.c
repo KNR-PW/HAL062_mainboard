@@ -6,7 +6,6 @@
  ******************************************************************************
  */
 
-
 #include <stm32h7xx_hal.h> // Simple HAL delay
 #include <stm32h7xx_hal_rcc.h>
 #include <stm32h7xx_hal_gpio.h>

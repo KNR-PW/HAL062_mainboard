@@ -50,16 +50,6 @@ bool BT_Init() {
 }
 
 bool Eth_Init() {
-////////////////////////////////////////////
-	// TODO: Usunąć LEDa testowego z płytki
-	GPIO_InitTypeDef gpio;
-
-	gpio.Pin = GPIO_PIN_14;
-	gpio.Mode = GPIO_MODE_OUTPUT_PP;
-	gpio.Pull = GPIO_NOPULL;
-	gpio.Speed = GPIO_SPEED_FREQ_LOW;
-
-////////////////////////////////////////
 
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 9600;
@@ -70,34 +60,18 @@ bool Eth_Init() {
 	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
 	ethHuart.Init.Mode = UART_MODE_TX_RX;
 
-	// TODO: Zmienić na konfigurację startową
-
 	//	Peripheral clock enable
 	__HAL_RCC_USART1_CLK_ENABLE();
 
-	///////////////////////////////////
-	// TODO: Zamienić na piny ethernetowe (z GPIOB na GPIOA)
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	ethGpio.Pin = GPIO_PIN_6 | GPIO_PIN_7;
-	//__HAL_RCC_GPIOA_CLK_ENABLE();
-	//ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
-	/////////////////////////////////////////
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
 
 	ethGpio.Mode = GPIO_MODE_AF_PP;
 	ethGpio.Alternate = GPIO_AF7_USART1;
 	ethGpio.Pull = GPIO_PULLDOWN;
 	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
 
-	///////////////////////////////////
-	// TODO: Zamienić na piny ethernetowe (z GPIOB na GPIOA)
-	//HAL_GPIO_Init(GPIOA, &ethGpio);
-	HAL_GPIO_Init(GPIOB, &ethGpio);
-	/////////////////////////////////////
-
-	//////////////////////////////////
-	// TODO: Usunąć inicjalizację ledów
-	HAL_GPIO_Init(GPIOB, &gpio);
-	////////////////////////////////
+	HAL_GPIO_Init(GPIOA, &ethGpio);
 
 	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -189,34 +163,6 @@ bool Eth_ReceiveData() {
 	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
 		return 0;
 	return 1;
-}
-
-void ETH_Test(void)
-{
-//	Wysyłanie działa nie ma co do gadania
-	MessageTypeDef exampl_mess = {
-			.ID = 0xf7,
-			.lenght = 7,
-			.data = {0xA1, 0x2B, 0xC3, 0x4D, 0xE5, 0x6F, 7, 8}
-	};
-	Eth_sendData(&exampl_mess);
-
-	Eth_ReceiveData();
-	while(1)
-	{
-		if(UART_MessageRecieved.ID == 1)
-		{
-			if(UART_MessageRecieved.data[0] != 0)
-			{
-				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-			}
-			else
-			{
-				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-			}
-		}
-	}
-
 }
 
 void UART_Decode(uint8_t* rawMessage) {
