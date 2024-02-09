@@ -33,16 +33,17 @@ int main(void) {
 //	FDCAN1_Init();
 //	FDCAN2_Init();
 
-	Eth_Init();
 	//Eth_ReceiveData();
 
 //	BT_Init();
 //	BT_ReceiveData();
 
+	Eth_Init();
+	ETH_Test();
+
 	/* Loop forever */
 
 	while (1) {
-		ETH_Test();
 		//Can_testMessage();
 		//HAL_Delay(100);
 //		BT_sendData(id, data);

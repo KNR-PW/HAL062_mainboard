@@ -50,13 +50,16 @@ bool BT_Init() {
 }
 
 bool Eth_Init() {
-
+////////////////////////////////////////////
+	// TODO: Usunąć LEDa testowego z płytki
 	GPIO_InitTypeDef gpio;
 
 	gpio.Pin = GPIO_PIN_14;
 	gpio.Mode = GPIO_MODE_OUTPUT_PP;
 	gpio.Pull = GPIO_NOPULL;
 	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+
+////////////////////////////////////////
 
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 9600;
@@ -71,18 +74,30 @@ bool Eth_Init() {
 
 	//	Peripheral clock enable
 	__HAL_RCC_USART1_CLK_ENABLE();
-	//__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
 
-	//ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
+	///////////////////////////////////
+	// TODO: Zamienić na piny ethernetowe (z GPIOB na GPIOA)
+	__HAL_RCC_GPIOB_CLK_ENABLE();
 	ethGpio.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+	//__HAL_RCC_GPIOA_CLK_ENABLE();
+	//ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
+	/////////////////////////////////////////
+
 	ethGpio.Mode = GPIO_MODE_AF_PP;
 	ethGpio.Alternate = GPIO_AF7_USART1;
 	ethGpio.Pull = GPIO_PULLDOWN;
 	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
+
+	///////////////////////////////////
+	// TODO: Zamienić na piny ethernetowe (z GPIOB na GPIOA)
 	//HAL_GPIO_Init(GPIOA, &ethGpio);
 	HAL_GPIO_Init(GPIOB, &ethGpio);
+	/////////////////////////////////////
+
+	//////////////////////////////////
+	// TODO: Usunąć inicjalizację ledów
 	HAL_GPIO_Init(GPIOB, &gpio);
+	////////////////////////////////
 
 	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(USART1_IRQn);
@@ -103,30 +118,25 @@ bool Eth_sendData(MessageTypeDef* MessageToSend)
 	ethTxBuffer[1] = (MessageToSend->ID & 0xF0) >> 4;
 	ethTxBuffer[2] = MessageToSend->ID & 0x0F;
 
-	for(uint8_t i = 0; i < 8; i++)
-	{
-		if(i >= MessageToSend->lenght)
-		{
-			ethTxBuffer[2*i + 3] = 'x';
-			ethTxBuffer[2*i + 4] = 'x';
+	// Wsadzanie danych do bufora
+	for(uint8_t i = 0; i < 8; i++) {
+		if(i >= MessageToSend->lenght) {
+			ethTxBuffer[2*i + 3] = 'X';
+			ethTxBuffer[2*i + 4] = 'X';
 		}
-		else
-		{
+		else {
 			ethTxBuffer[2*i + 3] = (MessageToSend->data[i] & 0xF0) >> 4;
 			ethTxBuffer[2*i + 4] = MessageToSend->data[i] & 0x0F;
 		}
 	}
 
+	// Konwertowanie tego na ascii
 	for(uint8_t i = 1; i < 19; i++)
 	{
 		if(ethTxBuffer[i] >= 0 && ethTxBuffer[i] <= 9)
-		{
 			ethTxBuffer[i] += '0';
-		}
 		else if(ethTxBuffer[i] >= 0x0A && ethTxBuffer[i] <= 0x0F)
-		{
 			ethTxBuffer[i] = ethTxBuffer[i] - 0x0A + 'A';
-		}
 	}
 
 	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, HAL_MAX_DELAY) == HAL_OK) {
@@ -143,30 +153,24 @@ bool BT_sendData(MessageTypeDef* MessageToSend) {
 	btTxBuffer[1] = (MessageToSend->ID & 0xF0) >> 4;
 	btTxBuffer[2] = MessageToSend->ID & 0x0F;
 
-	for(uint8_t i = 0; i < 8; i++)
-	{
-		if(i >= MessageToSend->lenght)
-		{
-			btTxBuffer[2*i + 3] = 'x';
-			btTxBuffer[2*i + 4] = 'x';
+	// Wsadzanie danych do bufora
+	for(uint8_t i = 0; i < 8; i++) {
+		if(i >= MessageToSend->lenght) {
+			btTxBuffer[2*i + 3] = 'X';
+			btTxBuffer[2*i + 4] = 'X';
 		}
-		else
-		{
+		else {
 			btTxBuffer[2*i + 3] = (MessageToSend->data[i] & 0xF0) >> 4;
 			btTxBuffer[2*i + 4] = MessageToSend->data[i] & 0x0F;
 		}
 	}
 
-	for(uint8_t i = 1; i < 19; i++)
-	{
+	// Konwertowanie tego na ascii
+	for(uint8_t i = 1; i < 19; i++) {
 		if(btTxBuffer[i] >= 0 && btTxBuffer[i] <= 9)
-		{
 			btTxBuffer[i] += '0';
-		}
 		else if(btTxBuffer[i] >= 0x0A && btTxBuffer[i] <= 0x0F)
-		{
 			btTxBuffer[i] = btTxBuffer[i] - 0x0A + 'A';
-		}
 	}
 
 	if (HAL_UART_Transmit(&ethHuart, btTxBuffer, 19, HAL_MAX_DELAY) == HAL_OK) {
@@ -190,8 +194,12 @@ bool Eth_ReceiveData() {
 void ETH_Test(void)
 {
 //	Wysyłanie działa nie ma co do gadania
-//	MessageTypeDef exampl_mess = {0xf7, 8, {0xA1, 0x2B, 0xC3, 0x4D, 0xE5, 0x6F, 7, 8}};
-//	Eth_sendData(&exampl_mess);
+	MessageTypeDef exampl_mess = {
+			.ID = 0xf7,
+			.lenght = 7,
+			.data = {0xA1, 0x2B, 0xC3, 0x4D, 0xE5, 0x6F, 7, 8}
+	};
+	Eth_sendData(&exampl_mess);
 
 	Eth_ReceiveData();
 	while(1)
