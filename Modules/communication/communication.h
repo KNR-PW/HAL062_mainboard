@@ -18,6 +18,7 @@
 
 #include <stm32h7xx_hal.h>
 #include <stdbool.h>
+#include <can/can.h>
 
 /* Structures -----------------------------------------------------------------*/
 
@@ -50,7 +51,7 @@ bool BT_Init();
  * @params info	:	Information to send (check frame documentation)
  * *******************************************************************************
 */
-bool BT_sendData(char *ID, char *info);
+bool BT_sendData(MessageTypeDef* MessageToSend);
 
 /**
  * *******************************************************************************
@@ -59,7 +60,7 @@ bool BT_sendData(char *ID, char *info);
  * @params info	:	Information to send (check frame documentation)
  * *******************************************************************************
 */
-bool Eth_sendData(char *ID, char *info);
+bool Eth_sendData(MessageTypeDef* MessageToSend);
 
 /**
  * *******************************************************************************

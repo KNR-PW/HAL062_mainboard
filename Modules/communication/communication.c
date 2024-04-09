@@ -11,91 +11,23 @@
 
 #include <stm32h7xx_hal.h>
 #include <string.h>
-#include "can/can.h"
 #include "communication/communication.h"
 
+
+extern UART_HandleTypeDef btHuart;
+extern UART_HandleTypeDef ethHuart;
 
 static GPIO_InitTypeDef ethGpio;
 static GPIO_InitTypeDef btGpio;
 
 static uint32_t err_counter = 0;
-extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing message
 
-UART_HandleTypeDef btHuart;
-UART_HandleTypeDef ethHuart;
+volatile extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing message
+
 
 uint8_t UART_ReceivedRaw[19]; // check frame documentation
-uint8_t searching = 0u;
-uint8_t magnetosearching = 0u;
-uint8_t tutaj = 0u;
-
-
-DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart5_rx;
 
 struct commands uartCommands;
-
-/**
- * *******************************************************************************
- * @brief	:	Overwritten callback after receiving message
- * *******************************************************************************
-*/
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart->Instance == USART1) {
-		UART_Decode(UART_ReceivedRaw);
-
-		COM_RunUartAction(&UART_MessageRecieved);
-		UART_MessageRecieved.ID = 0;
-		memset(&UART_MessageRecieved.data, 0x0u, 8);
-		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
-	}
-	else if (huart->Instance == USART3) {
-		UART_Decode(UART_ReceivedRaw);
-
-		COM_RunUartAction(&UART_MessageRecieved);
-		UART_MessageRecieved.ID = 0;
-		memset(&UART_MessageRecieved.data, 0x0u, 8);
-		HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
-	}
-
-//	if (huart->Instance == USART1) {
-//		UART_Decode(UART_ReceivedRaw);
-//		if (searching == 0) {
-//			COM_RunUartAction(&UART_MessageRecieved);
-//			UART_MessageRecieved.ID = 0;
-//			memset(&UART_MessageRecieved.data, 0x0u, 8);
-//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
-//			return;
-//		}
-//		if (searching == 1) {
-//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 1);
-//			return;
-//		}
-//		if (searching == 2) {
-//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
-//			return;
-//		}
-//	}
-//	else if(huart->Instance == USART3)
-//	{
-//		UART_Decode(UART_ReceivedRaw);
-//		if (searching == 0) {
-//			COM_RunUartAction(&UART_MessageRecieved);
-//			UART_MessageRecieved.ID = 0;
-//			memset(&UART_MessageRecieved.data, 0x0u, 8);
-//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
-//			return;
-//		}
-//		if (searching == 1) {
-//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 1);
-//			return;
-//		}
-//		if (searching == 2) {
-//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
-//			return;
-//		}
-//	}
-}
 
 /**
  * *******************************************************************************
@@ -111,7 +43,7 @@ bool BT_Init() {
 	btHuart.Init.StopBits = UART_STOPBITS_1;
 	btHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	btHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	btHuart.Init.Mode = UART_MODE_RX;
+	btHuart.Init.Mode = UART_MODE_TX_RX;
 
 	/* Peripheral clock enable */
 	__HAL_RCC_USART3_CLK_ENABLE();
@@ -150,7 +82,7 @@ bool Eth_Init() {
 	ethHuart.Init.StopBits = UART_STOPBITS_1;
 	ethHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	ethHuart.Init.Mode = UART_MODE_RX;
+	ethHuart.Init.Mode = UART_MODE_TX_RX;
 
 	//	Peripheral clock enable
 	__HAL_RCC_USART1_CLK_ENABLE();
@@ -176,25 +108,39 @@ bool Eth_Init() {
 
 /**
  * *******************************************************************************
- * @details		:	Creating table of chars contains:
- * 					# - all message contains "#" at begging
- * 					ID - all data needs to have ID to identify what
- * 						 concrete data means
- * 					info - depending on ID, info contains concrete data
- * @see			:	UART frame documentation
+ * @details		:	TODO
  * *******************************************************************************
 */
-bool Eth_sendData(char *ID, char *info) {
+bool Eth_sendData(MessageTypeDef* MessageToSend) {
 
-	uint8_t ethTxBuffer[19];
+	static uint8_t ethTxBuffer[19];
 	ethTxBuffer[0] = '#';
-	for (uint8_t i = 0; i < 2; i++)
-		ethTxBuffer[i + 1] = ID[i];
 
-	for (uint8_t i = 0; i < 16; i++)
-		ethTxBuffer[i + 3] = info[i];
+	ethTxBuffer[1] = (MessageToSend->ID & 0xF0) >> 4;
+	ethTxBuffer[2] = MessageToSend->ID & 0x0F;
 
-	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, 1000) == HAL_OK) {
+	// Wsadzanie danych do bufora
+	for(uint8_t i = 0; i < 8; i++) {
+		if(i >= MessageToSend->lenght) {
+			ethTxBuffer[2*i + 3] = 'X';
+			ethTxBuffer[2*i + 4] = 'X';
+		}
+		else {
+			ethTxBuffer[2*i + 3] = (MessageToSend->data[i] & 0xF0) >> 4;
+			ethTxBuffer[2*i + 4] = MessageToSend->data[i] & 0x0F;
+		}
+	}
+
+	// Konwertowanie tego na ascii
+	for(uint8_t i = 1; i < 19; i++)
+	{
+		if(ethTxBuffer[i] >= 0 && ethTxBuffer[i] <= 9)
+			ethTxBuffer[i] += '0';
+		else if(ethTxBuffer[i] >= 0x0A && ethTxBuffer[i] <= 0x0F)
+			ethTxBuffer[i] = ethTxBuffer[i] - 0x0A + 'A';
+	}
+
+	if (HAL_UART_Transmit_IT(&ethHuart, ethTxBuffer, 19) == HAL_OK) {
 		return 0;
 	}
 	return 1;
@@ -202,28 +148,42 @@ bool Eth_sendData(char *ID, char *info) {
 
 /**
  * *******************************************************************************
- * @details		:	Creating table of chars contains:
- * 					# - all message contains "#" at begging
- * 					ID - all data needs to have ID to identify what
- * 						 concrete data means
- * 					info - depending on ID, info contains concrete data
- * @see			:	UART frame documentation
+ * @details		:	TODO
  * *******************************************************************************
 */
 bool BT_sendData(char *ID, char *info) {
 
-	uint8_t btTxBuffer[19];
+
+	static uint8_t btTxBuffer[19];
 	btTxBuffer[0] = '#';
-	for (uint8_t i = 0; i < 2; i++)
-		btTxBuffer[i + 1] = ID[i];
 
-	for (uint8_t i = 0; i < 16; i++)
-		btTxBuffer[i + 3] = info[i];
+	btTxBuffer[1] = (MessageToSend->ID & 0xF0) >> 4;
+	btTxBuffer[2] = MessageToSend->ID & 0x0F;
 
-	if (HAL_UART_Transmit(&btHuart, btTxBuffer, 19, 1000) == HAL_OK) {
+	// Wsadzanie danych do bufora
+	for(uint8_t i = 0; i < 8; i++) {
+		if(i >= MessageToSend->lenght) {
+			btTxBuffer[2*i + 3] = 'X';
+			btTxBuffer[2*i + 4] = 'X';
+		}
+		else {
+			btTxBuffer[2*i + 3] = (MessageToSend->data[i] & 0xF0) >> 4;
+			btTxBuffer[2*i + 4] = MessageToSend->data[i] & 0x0F;
+		}
+	}
+
+	// Konwertowanie tego na ascii
+	for(uint8_t i = 1; i < 19; i++) {
+		if(btTxBuffer[i] >= 0 && btTxBuffer[i] <= 9)
+			btTxBuffer[i] += '0';
+		else if(btTxBuffer[i] >= 0x0A && btTxBuffer[i] <= 0x0F)
+			btTxBuffer[i] = btTxBuffer[i] - 0x0A + 'A';
+	}
+
+	if (HAL_UART_Transmit_IT(&btHuart, btTxBuffer, 19) == HAL_OK) {
 		return 0;
 	}
-	return 1;
+		return 1;
 }
 
 /**
@@ -316,33 +276,25 @@ void UART_Decode(uint8_t* rawMessage) {
 	}
 }
 
-
 /**
  * *******************************************************************************
- * @brief		:	TODO required after changing to DMC
+ * @brief	:	Overwritten callback after receiving message
  * *******************************************************************************
 */
-void DMA_STR0_IRQHandler(void) {
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	if (huart->Instance == USART1) {
+		UART_Decode(UART_ReceivedRaw);
 
-	HAL_DMA_IRQHandler(&hdma_usart1_rx);
+		COM_RunUartAction();
+		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+	}
+	else if (huart->Instance == USART3) {
+		UART_Decode(UART_ReceivedRaw);
 
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx,
-			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
+		COM_RunUartAction();
+		HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
+	}
 }
-
-/**
- * *******************************************************************************
- * @brief		:	TODO required after changing to DMC
- * *******************************************************************************
-*/
-void DMA_STR2_IRQHandler(void) {
-
-	HAL_DMA_IRQHandler(&hdma_usart5_rx);
-
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart5_rx,
-			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart5_rx));
-}
-
 
 /**
  * *******************************************************************************

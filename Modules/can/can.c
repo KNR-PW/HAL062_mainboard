@@ -31,7 +31,7 @@ uint8_t testData[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
 
 /* Static variables -----------------------------------------------------------*/
 
-MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
+extern MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
 
 /* Functions ------------------------------------------------------------------*/
 
@@ -210,7 +210,7 @@ void Can_testMessage(void) {
  * 						CAN1 or CAN2 depending on message ID
  ******************************************************************************
  */
-void COM_RunUartAction(MessageTypeDef *message) {
+void COM_RunUartAction() {
 	UART_MessageRecieved.ID = message->ID;
 	memcpy(UART_MessageRecieved.data, message->data, 8);
 	UART_MessageRecieved.lenght = message->lenght;

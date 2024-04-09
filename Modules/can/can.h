@@ -22,6 +22,7 @@ typedef struct {
 	uint8_t data[8];
 } MessageTypeDef;
 
+MessageTypeDef UART_MessageRecieved;
 
 /* Functions ------------------------------------------------------------------*/
 
@@ -52,7 +53,7 @@ void Can_testMessage(void);
  * 					which pass message to appropriate CAN
  * *******************************************************************************
  */
-void COM_RunUartAction(MessageTypeDef *message);
+void COM_RunUartAction();
 
 /**
  * *******************************************************************************
