@@ -19,6 +19,12 @@
 #include <stm32h7xx_hal.h>
 #include <stdbool.h>
 
+/* Structures -----------------------------------------------------------------*/
+
+struct commands{
+	uint8_t messages[20][19];
+	uint8_t numberOfCommands;
+};
 
 /* Functions ------------------------------------------------------------------*/
 

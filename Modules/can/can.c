@@ -31,7 +31,7 @@ uint8_t testData[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
 
 /* Static variables -----------------------------------------------------------*/
 
-static MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
+MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
 
 /* Functions ------------------------------------------------------------------*/
 
@@ -42,17 +42,19 @@ static MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or 
  */
 void FDCAN1_Init(void) {
 
+	FDCAN_FilterTypeDef sFilterConfig;
+
 	hfdcan1.Instance = FDCAN1;
 	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
 	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
-	hfdcan1.Init.NominalPrescaler = 8;
+	hfdcan1.Init.NominalPrescaler = 8; // 0.5 Mhz
 	hfdcan1.Init.NominalSyncJumpWidth = 1;
 	hfdcan1.Init.NominalTimeSeg1 = 4;
 	hfdcan1.Init.NominalTimeSeg2 = 5;
-	hfdcan1.Init.DataPrescaler = 8;
+	hfdcan1.Init.DataPrescaler = 8; // 0.5 MHz
 	hfdcan1.Init.DataSyncJumpWidth = 1;
 	hfdcan1.Init.DataTimeSeg1 = 4;
 	hfdcan1.Init.DataTimeSeg2 = 5;
@@ -74,22 +76,27 @@ void FDCAN1_Init(void) {
 		Error_Handler();
 	}
 
-	// Configure standard ID reception filter to Rx buffer 0
-	FDCAN_FilterTypeDef sFilterConfig;
+	/* Configure standard ID reception filter to Rx buffer 0 */
 	sFilterConfig.IdType = FDCAN_STANDARD_ID;
 	sFilterConfig.FilterIndex = 0;
+#if 0
+  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+#endif
 	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
 	sFilterConfig.FilterID1 = 0x2; // ID Node2
+#if 0
+  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+#endif
 	sFilterConfig.RxBufferIndex = 0;
-
 	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK) {
 		Error_Handler();
 	}
 
-	// Start the FDCAN module
+	/* Start the FDCAN module */
 	if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
 		Error_Handler();
 	}
+
 }
 
 /**
@@ -97,7 +104,10 @@ void FDCAN1_Init(void) {
  * @brief          : Initialization of CAN2
  ******************************************************************************
  */
+
 void FDCAN2_Init(void) {
+
+	FDCAN_FilterTypeDef sFilterConfig;
 
 	hfdcan2.Instance = FDCAN2;
 	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
@@ -105,11 +115,11 @@ void FDCAN2_Init(void) {
 	hfdcan2.Init.AutoRetransmission = DISABLE;
 	hfdcan2.Init.TransmitPause = DISABLE;
 	hfdcan2.Init.ProtocolException = DISABLE;
-	hfdcan2.Init.NominalPrescaler = 150;
+	hfdcan2.Init.NominalPrescaler = 40; // 0.5 Mhz
 	hfdcan2.Init.NominalSyncJumpWidth = 1;
 	hfdcan2.Init.NominalTimeSeg1 = 9;
 	hfdcan2.Init.NominalTimeSeg2 = 8;
-	hfdcan2.Init.DataPrescaler = 150;
+	hfdcan2.Init.DataPrescaler = 40; // 0.5 MHz
 	hfdcan2.Init.DataSyncJumpWidth = 1;
 	hfdcan2.Init.DataTimeSeg1 = 9;
 	hfdcan2.Init.DataTimeSeg2 = 8;
@@ -131,19 +141,23 @@ void FDCAN2_Init(void) {
 		Error_Handler();
 	}
 
-	// Configure standard ID reception filter to Rx buffer 0
-	FDCAN_FilterTypeDef sFilterConfig;
+	/* Configure standard ID reception filter to Rx buffer 0 */
 	sFilterConfig.IdType = FDCAN_STANDARD_ID;
 	sFilterConfig.FilterIndex = 0;
+#if 0
+  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+#endif
 	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
 	sFilterConfig.FilterID1 = 0x2; // ID Node2
+#if 0
+  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+#endif
 	sFilterConfig.RxBufferIndex = 0;
-
 	if (HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig) != HAL_OK) {
 		Error_Handler();
 	}
 
-	// Start the FDCAN module
+	/* Start the FDCAN module */
 	if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
 		Error_Handler();
 	}
@@ -220,7 +234,6 @@ void transferTo() {
 		transferToCan1();
 	return;
 }
-
 
 /**
  ******************************************************************************

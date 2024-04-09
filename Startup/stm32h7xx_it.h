@@ -42,6 +42,7 @@ void FDCAN2_IT1_IRQHandler(void);
 void FDCAN_CAL_IRQHandler(void);
 void USART1_IRQHandler(void);
 void USART3_IRQHandler(void);
+void TIM7_IRQHandler(void);
 
 #ifdef __cplusplus
 }

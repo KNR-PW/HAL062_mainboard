@@ -19,7 +19,7 @@ static GPIO_InitTypeDef ethGpio;
 static GPIO_InitTypeDef btGpio;
 
 static uint32_t err_counter = 0;
-static MessageTypeDef UART_MessageRecieved; // struct from can.h representing message
+extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing message
 
 UART_HandleTypeDef btHuart;
 UART_HandleTypeDef ethHuart;
@@ -33,6 +33,7 @@ uint8_t tutaj = 0u;
 DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart5_rx;
 
+struct commands uartCommands;
 
 /**
  * *******************************************************************************
@@ -42,41 +43,58 @@ DMA_HandleTypeDef hdma_usart5_rx;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART1) {
 		UART_Decode(UART_ReceivedRaw);
-		if (searching == 0) {
-			COM_RunUartAction(&UART_MessageRecieved);
-			UART_MessageRecieved.ID = 0;
-			memset(&UART_MessageRecieved.data, 0x0u, 8);
-			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
-			return;
-		}
-		if (searching == 1) {
-			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 1);
-			return;
-		}
-		if (searching == 2) {
-			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
-			return;
-		}
+
+		COM_RunUartAction(&UART_MessageRecieved);
+		UART_MessageRecieved.ID = 0;
+		memset(&UART_MessageRecieved.data, 0x0u, 8);
+		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
 	}
-	else if(huart->Instance == USART3)
-	{
+	else if (huart->Instance == USART3) {
 		UART_Decode(UART_ReceivedRaw);
-		if (searching == 0) {
-			COM_RunUartAction(&UART_MessageRecieved);
-			UART_MessageRecieved.ID = 0;
-			memset(&UART_MessageRecieved.data, 0x0u, 8);
-			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
-			return;
-		}
-		if (searching == 1) {
-			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 1);
-			return;
-		}
-		if (searching == 2) {
-			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
-			return;
-		}
+
+		COM_RunUartAction(&UART_MessageRecieved);
+		UART_MessageRecieved.ID = 0;
+		memset(&UART_MessageRecieved.data, 0x0u, 8);
+		HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
 	}
+
+//	if (huart->Instance == USART1) {
+//		UART_Decode(UART_ReceivedRaw);
+//		if (searching == 0) {
+//			COM_RunUartAction(&UART_MessageRecieved);
+//			UART_MessageRecieved.ID = 0;
+//			memset(&UART_MessageRecieved.data, 0x0u, 8);
+//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+//			return;
+//		}
+//		if (searching == 1) {
+//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 1);
+//			return;
+//		}
+//		if (searching == 2) {
+//			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
+//			return;
+//		}
+//	}
+//	else if(huart->Instance == USART3)
+//	{
+//		UART_Decode(UART_ReceivedRaw);
+//		if (searching == 0) {
+//			COM_RunUartAction(&UART_MessageRecieved);
+//			UART_MessageRecieved.ID = 0;
+//			memset(&UART_MessageRecieved.data, 0x0u, 8);
+//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
+//			return;
+//		}
+//		if (searching == 1) {
+//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 1);
+//			return;
+//		}
+//		if (searching == 2) {
+//			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
+//			return;
+//		}
+//	}
 }
 
 /**
@@ -290,8 +308,8 @@ void UART_Decode(uint8_t* rawMessage) {
 			i++;
 			index++;
 		}
-		for(int j=index;j<8;j++){
-			UART_MessageRecieved.data[j]='x';
+		for(uint8_t j=index;j<8;j++){
+			UART_MessageRecieved.data[j]='X';
 		}
 		UART_MessageRecieved.lenght = index;
 
