@@ -14,6 +14,10 @@
 #include "can/can.h"
 #include "communication/communication.h"
 
+#define LED1_PIN 111
+#define LED2_PIN 112
+#define LED3_PIN 113
+#define LED_PORT GPIOC
 
 static GPIO_InitTypeDef ethGpio;
 static GPIO_InitTypeDef btGpio;
@@ -33,6 +37,32 @@ uint8_t tutaj = 0u;
 DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart5_rx;
 
+void handleLED(uint8_t *data) {
+    // Sprawdzenie czy dane spełniają warunki i włączenie odpowiedniej diody
+    if (data[0] == 1) {
+        HAL_GPIO_WritePin(LED_PORT, LED1_PIN, GPIO_PIN_SET);
+    }
+    else
+    {
+    	HAL_GPIO_WritePin(LED_PORT, LED1_PIN, GPIO_PIN_RESET);
+    }
+    if (data[1] == 1) {
+        HAL_GPIO_WritePin(LED_PORT, LED2_PIN, GPIO_PIN_SET);
+    }
+    else
+        {
+        	HAL_GPIO_WritePin(LED_PORT, LED2_PIN, GPIO_PIN_RESET);
+        }
+    if (data[2] == 1) {
+    	
+    	
+        HAL_GPIO_WritePin(LED_PORT, LED3_PIN, GPIO_PIN_SET);
+    }
+    else
+            {
+            	HAL_GPIO_WritePin(LED_PORT, LED3_PIN, GPIO_PIN_RESET);
+            }
+}
 
 /**
  * *******************************************************************************
@@ -57,6 +87,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
 			return;
 		}
+		if (UART_MessageRecieved.ID == 10  ) {
+				        handleLED(UART_MessageRecieved.data);
+				    }
 	}
 	else if(huart->Instance == USART3)
 	{
@@ -181,7 +214,19 @@ bool Eth_sendData(char *ID, char *info) {
 	}
 	return 1;
 }
+bool GPIO_Init() {
+    
 
+    // Inicjalizacja pinów diod
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = LED1_PIN | LED2_PIN | LED3_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+
+    return 0;
+}
 /**
  * *******************************************************************************
  * @details		:	Creating table of chars contains:
@@ -257,6 +302,7 @@ void UART_Decode(uint8_t* rawMessage) {
 		searching = 0;
 	}
 
+
 	/*Zamiana hex w ACSII na liczbe*/
 	if(rawMessage[0] == '#')
 	{
@@ -296,6 +342,7 @@ void UART_Decode(uint8_t* rawMessage) {
 		UART_MessageRecieved.lenght = index;
 
 	}
+	
 }
 
 
