@@ -59,9 +59,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
 			return;
 		}
-		if (UART_MessageRecieved.ID == 10  ) {
-				        handleLED(UART_MessageRecieved.data);
-				    }
+		if (UART_MessageRecieved.ID == 10  ) 
+		{
+			handleLED(UART_MessageRecieved.data);
+			Set_Max_Values(UART_MessageRecieved.data);
+		}
 	}
 	else if(huart->Instance == USART3)
 	{
@@ -80,6 +82,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		if (searching == 2) {
 			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
 			return;
+		}
+		if (UART_MessageRecieved.ID == 10  ) 
+		{
+			handleLED(UART_MessageRecieved.data);
+			Set_Max_Values(UART_MessageRecieved.data);
 		}
 	}
 }
