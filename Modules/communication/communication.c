@@ -43,20 +43,52 @@ struct commands uartCommands;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART1) {
 		UART_Decode(UART_ReceivedRaw);
-
-		COM_RunUartAction(&UART_MessageRecieved);
-		UART_MessageRecieved.ID = 0;
-		memset(&UART_MessageRecieved.data, 0x0u, 8);
-		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+		if (searching == 0) {
+			COM_RunUartAction(&UART_MessageRecieved);
+			UART_MessageRecieved.ID = 0;
+			memset(&UART_MessageRecieved.data, 0x0u, 8);
+			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+			return;
+		}
+		if (searching == 1) {
+			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 1);
+			return;
+		}
+		if (searching == 2) {
+			HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 18);
+			return;
+		}
+		if (UART_MessageRecieved.ID == 45  ) 
+		{
+			handleCamera(UART_MessageRecieved.data);
+			Set_Max_Values(UART_MessageRecieved.data);
+		}
 	}
-	else if (huart->Instance == USART3) {
+	else if(huart->Instance == USART3)
+	{
 		UART_Decode(UART_ReceivedRaw);
-
-		COM_RunUartAction(&UART_MessageRecieved);
-		UART_MessageRecieved.ID = 0;
-		memset(&UART_MessageRecieved.data, 0x0u, 8);
-		HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
+		if (searching == 0) {
+			COM_RunUartAction(&UART_MessageRecieved);
+			UART_MessageRecieved.ID = 0;
+			memset(&UART_MessageRecieved.data, 0x0u, 8);
+			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
+			return;
+		}
+		if (searching == 1) {
+			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 1);
+			return;
+		}
+		if (searching == 2) {
+			HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 18);
+			return;
+		}
+		if (UART_MessageRecieved.ID == 45  ) 
+		{
+			handleCamera(UART_MessageRecieved.data);
+			Set_Max_Values(UART_MessageRecieved.data);
+		}
 	}
+}
 
 //	if (huart->Instance == USART1) {
 //		UART_Decode(UART_ReceivedRaw);
