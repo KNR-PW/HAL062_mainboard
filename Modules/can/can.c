@@ -23,15 +23,16 @@
 FDCAN_HandleTypeDef hfdcan1;
 FDCAN_HandleTypeDef hfdcan2;
 
-FDCAN_TxHeaderTypeDef TxHeader_CAN1;
-FDCAN_TxHeaderTypeDef TxHeader_CAN2;
-FDCAN_RxHeaderTypeDef RxHeader;
+static FDCAN_TxHeaderTypeDef TxHeader_CAN1;
+static FDCAN_TxHeaderTypeDef TxHeader_CAN2;
+static volatile FDCAN_RxHeaderTypeDef RxHeader;
 
-uint8_t testData[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
-
+static uint8_t testData[8] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
+static volatile RxData[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /* Static variables -----------------------------------------------------------*/
 
 MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
+MessageTypeDef CAN_MessageRecieved;
 
 /* Functions ------------------------------------------------------------------*/
 
@@ -44,9 +45,10 @@ void FDCAN1_Init(void) {
 
 	FDCAN_FilterTypeDef sFilterConfig;
 
+	// TODO: Zienić tryb FDCAN1
 	hfdcan1.Instance = FDCAN1;
 	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
+	hfdcan1.Init.Mode = FDCAN_MODE_EXTERNAL_LOOPBACK;
 	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
@@ -61,11 +63,11 @@ void FDCAN1_Init(void) {
 	hfdcan1.Init.MessageRAMOffset = 0;
 	hfdcan1.Init.StdFiltersNbr = 1;
 	hfdcan1.Init.ExtFiltersNbr = 0;
-	hfdcan1.Init.RxFifo0ElmtsNbr = 0;
+	hfdcan1.Init.RxFifo0ElmtsNbr = 1;
 	hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
 	hfdcan1.Init.RxFifo1ElmtsNbr = 0;
 	hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan1.Init.RxBuffersNbr = 1;
+	hfdcan1.Init.RxBuffersNbr = 0;
 	hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
 	hfdcan1.Init.TxEventsNbr = 0;
 	hfdcan1.Init.TxBuffersNbr = 1;
@@ -76,19 +78,19 @@ void FDCAN1_Init(void) {
 		Error_Handler();
 	}
 
-	/* Configure standard ID reception filter to Rx buffer 0 */
+	/* Configure standard ID reception filter to Rx FIFO 0 */
 	sFilterConfig.IdType = FDCAN_STANDARD_ID;
 	sFilterConfig.FilterIndex = 0;
-#if 0
-  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x2; // ID Node2
-#if 0
-  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.RxBufferIndex = 0;
+    sFilterConfig.FilterType = FDCAN_FILTER_RANGE;
+	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+	sFilterConfig.FilterID1 = 0x1;
+    sFilterConfig.FilterID2 = 0x7F;	// ID range (0; 127]
+
 	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK) {
+		Error_Handler();
+	}
+
+	if(HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
 		Error_Handler();
 	}
 
@@ -109,9 +111,10 @@ void FDCAN2_Init(void) {
 
 	FDCAN_FilterTypeDef sFilterConfig;
 
+	// TODO: Zmienić tryb FDCAN2
 	hfdcan2.Instance = FDCAN2;
 	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
+	hfdcan2.Init.Mode = FDCAN_MODE_EXTERNAL_LOOPBACK;
 	hfdcan2.Init.AutoRetransmission = DISABLE;
 	hfdcan2.Init.TransmitPause = DISABLE;
 	hfdcan2.Init.ProtocolException = DISABLE;
@@ -126,11 +129,11 @@ void FDCAN2_Init(void) {
 	hfdcan2.Init.MessageRAMOffset = 0;
 	hfdcan2.Init.StdFiltersNbr = 1;
 	hfdcan2.Init.ExtFiltersNbr = 0;
-	hfdcan2.Init.RxFifo0ElmtsNbr = 0;
+	hfdcan2.Init.RxFifo0ElmtsNbr = 1;
 	hfdcan2.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
 	hfdcan2.Init.RxFifo1ElmtsNbr = 0;
 	hfdcan2.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan2.Init.RxBuffersNbr = 1;
+	hfdcan2.Init.RxBuffersNbr = 0;
 	hfdcan2.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
 	hfdcan2.Init.TxEventsNbr = 0;
 	hfdcan2.Init.TxBuffersNbr = 1;
@@ -141,19 +144,19 @@ void FDCAN2_Init(void) {
 		Error_Handler();
 	}
 
-	/* Configure standard ID reception filter to Rx buffer 0 */
+	/* Configure standard ID reception filter to Rx FIFO 0 */
 	sFilterConfig.IdType = FDCAN_STANDARD_ID;
-	sFilterConfig.FilterIndex = 0;
-#if 0
-  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x2; // ID Node2
-#if 0
-  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.RxBufferIndex = 0;
+	sFilterConfig.FilterIndex = 1;
+    sFilterConfig.FilterType = FDCAN_FILTER_RANGE;
+	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+	sFilterConfig.FilterID1 = 0x80;
+    sFilterConfig.FilterID2 = 0xFF;	// ID range (127; 256]
+
 	if (HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig) != HAL_OK) {
+		Error_Handler();
+	}
+
+	if(HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
 		Error_Handler();
 	}
 
@@ -281,6 +284,26 @@ void transferToCan1() {
 	// Toggle LED5 to know that message was sent
 	Leds_toggleLed(LED5);
 }
+
+static void MessageTransferFromCAN(void)
+{
+	CAN_MessageRecieved.ID = RxHeader.Identifier;
+
+	for(uint8_t i = 0; i < 8; i++)
+	{
+		CAN_MessageRecieved.data[i] = RxData[i];
+	}
+	// TODO: Oszacowanie długości
+}
+
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+{
+	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData);
+	MessageTransferFromCAN();
+	asm("nop");
+}
+
+
 
 /**
  ******************************************************************************
