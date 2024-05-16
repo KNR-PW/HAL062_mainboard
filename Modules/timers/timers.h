@@ -6,9 +6,20 @@
  ******************************************************************************
  */
 
-#ifndef MODULES_CAN_CAN_H_
-#define MODULES_CAN_CAN_H_
+#ifndef MODULES_TIMERS_TIMERS_H_
+#define MODULES_TIMERS_TIMERS_H_
+
+#define CAM_STER3_Pin GPIO_PIN_0
+#define CAM_STER3_GPIO_Port GPIOC
+#define CAM_STER2_Pin GPIO_PIN_1
+#define CAM_STER2_GPIO_Port GPIOC
+#define CAM_STER1_Pin GPIO_PIN_2
+#define CAM_STER1_GPIO_Port GPIOC
 
 void TIM7_Init(void);
 
-#endif /* MODULES_CAN_CAN_H_ */
+void Camera_Init(void);
+
+void TIM4_Init(void);
+
+#endif /* MODULES_TIMERS_TIMERS_H_ */

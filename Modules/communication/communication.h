@@ -84,4 +84,12 @@ bool Eth_ReceiveData();
 bool BT_ReceiveData() ;
 
 
+/**
+ * *******************************************************************************
+ * @brief				:	Watchdog to control communication failure
+ * *******************************************************************************
+*/
+void Watchdog_Init(void);
+
+
 #endif // MODULE_COMMUNICATION_COMMUNICATION_H

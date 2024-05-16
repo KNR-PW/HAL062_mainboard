@@ -162,6 +162,12 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     HAL_NVIC_SetPriority(TIM7_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM7_IRQn);
   }
+  else if(htim_base->Instance==TIM4)
+  {
+	  __HAL_RCC_TIM4_CLK_ENABLE();
+	  HAL_NVIC_SetPriority(TIM4_IRQn,0,0);
+	  HAL_NVIC_EnableIRQ(TIM4_IRQn);
+  }
 
 }
 
@@ -173,6 +179,11 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
     __HAL_RCC_TIM7_CLK_DISABLE();
 
     HAL_NVIC_DisableIRQ(TIM7_IRQn);
+  }
+  else if(htim_base->Instance==TIM4)
+  {
+	  __HAL_RCC_TIM4_CLK_DISABLE();
+	  HAL_NVIC_DisableIRQ(TIM4_IRQn);
   }
 
 }

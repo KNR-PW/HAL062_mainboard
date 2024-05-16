@@ -24,6 +24,8 @@ extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing me
 UART_HandleTypeDef btHuart;
 UART_HandleTypeDef ethHuart;
 
+IWDG_HandleTypeDef hiwdg1;
+
 uint8_t UART_ReceivedRaw[19]; // check frame documentation
 uint8_t searching = 0u;
 uint8_t magnetosearching = 0u;
@@ -35,6 +37,8 @@ DMA_HandleTypeDef hdma_usart5_rx;
 
 struct commands uartCommands;
 
+
+
 /**
  * *******************************************************************************
  * @brief	:	Overwritten callback after receiving message
@@ -42,6 +46,7 @@ struct commands uartCommands;
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART1) {
+		HAL_IWDG_Refresh(&hiwdg1);
 		UART_Decode(UART_ReceivedRaw);
 
 		COM_RunUartAction(&UART_MessageRecieved);
@@ -50,6 +55,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
 	}
 	else if (huart->Instance == USART3) {
+		HAL_IWDG_Refresh(&hiwdg1);
 		UART_Decode(UART_ReceivedRaw);
 
 		COM_RunUartAction(&UART_MessageRecieved);
@@ -152,6 +158,7 @@ bool Eth_Init() {
 	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
 	ethHuart.Init.Mode = UART_MODE_RX;
 
+
 	//	Peripheral clock enable
 	__HAL_RCC_USART1_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -161,6 +168,7 @@ bool Eth_Init() {
 	ethGpio.Alternate = GPIO_AF7_USART1;
 	ethGpio.Pull = GPIO_PULLDOWN;
 	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
+
 	HAL_GPIO_Init(GPIOA, &ethGpio);
 
 	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
@@ -172,6 +180,23 @@ bool Eth_Init() {
 	HAL_UARTEx_EnableFifoMode(&ethHuart);
 
 	return 0;
+}
+
+/**
+ * *******************************************************************************
+ * @details		:	Initialization of watchdog that will reset board
+ * 					after communcication failure
+ * *******************************************************************************
+*/
+void Watchdog_Init(void){
+	  hiwdg1.Instance = IWDG1;
+	  hiwdg1.Init.Prescaler = IWDG_PRESCALER_32;
+	  hiwdg1.Init.Window = 4095;
+	  hiwdg1.Init.Reload = 4095;
+	  if (HAL_IWDG_Init(&hiwdg1) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
 }
 
 /**
@@ -350,5 +375,7 @@ void DMA_STR2_IRQHandler(void) {
  * *******************************************************************************
 */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+
 	err_counter++;
+
 }
