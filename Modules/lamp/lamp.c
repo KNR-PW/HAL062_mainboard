@@ -5,9 +5,9 @@
 uint8_t Counter_red = 0;
 uint8_t Counter_blue = 0;
 uint8_t Counter_green = 0;
-uint8_t maxCounterRed ;
-uint8_t maxCounterBlue ;
-uint8_t maxCounterGreen ;
+uint8_t maxCounterRed = 0;
+uint8_t maxCounterBlue = 0;
+uint8_t maxCounterGreen = 0;
 
 void  Set_Max_Values(uint8_t *data)
 { maxCounterRed = data[3];
@@ -44,26 +44,8 @@ void MX_TIM16_Init(void)
   }
   HAL_TIM_Base_Start_IT(&htim16);
 }
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
-{
 
-  if(tim_baseHandle->Instance==TIM16)
-  {
-    __HAL_RCC_TIM16_CLK_ENABLE();
-    HAL_NVIC_SetPriority(TIM16_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM16_IRQn);
-   }
-}
 
-void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
-{
-
-  if(tim_baseHandle->Instance==TIM16)
-  {
-    __HAL_RCC_TIM16_CLK_DISABLE();
-    HAL_NVIC_DisableIRQ(TIM16_IRQn);
-  }
-}
 
 void handleLED(uint8_t *data) {
     // Sprawdzenie czy dane spełniają warunki i włączenie odpowiedniej diody
@@ -92,32 +74,4 @@ void handleLED(uint8_t *data) {
             }
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-if(htim->Instance == TIM16)
-{
-    // Inkrementacja liczników po każdym przerwaniu timera
-    Counter_red++;
-    Counter_blue++;
-    Counter_green++;
 
-    // Sprawdzenie, czy osiągnięto wartości maksymalne
-    if (Counter_red == maxCounterRed) {
-        // Zmiana stanu diody czerwonej
-        HAL_GPIO_TogglePin(LED_PORT, LED1_PIN);
-        // Resetowanie licznika
-        Counter_red = 0;
-    }
-    if (Counter_blue == maxCounterBlue) {
-        // Zmiana stanu diody niebieskiej
-        HAL_GPIO_TogglePin(LED_PORT, LED2_PIN);
-        // Resetowanie licznika
-        Counter_blue = 0;
-    }
-    if (Counter_green == maxCounterGreen) {
-        // Zmiana stanu diody zielonej
-        HAL_GPIO_TogglePin(LED_PORT, LED3_PIN);
-        // Resetowanie licznika
-        Counter_green = 0;
-    }
-    }
-}
