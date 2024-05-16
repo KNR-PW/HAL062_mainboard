@@ -14,6 +14,7 @@
 #include "can/can.h"
 #include "communication/communication.h"
 #include "camera/camera.h"
+#include "lamp/lamp.h"
 
 
 static GPIO_InitTypeDef ethGpio;
@@ -40,6 +41,7 @@ struct commands uartCommands;
 
 
 
+
 /**
  * *******************************************************************************
  * @brief	:	Overwritten callback after receiving message
@@ -53,6 +55,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		{
 			handleCamera(UART_MessageRecieved.data);
 		}
+		else if (UART_MessageRecieved.ID == 10  ) 
+		{
+			handleLED(UART_MessageRecieved.data);
+			Set_Max_Values(UART_MessageRecieved.data);
+		}
 		else
 		{
 			COM_RunUartAction(&UART_MessageRecieved);
@@ -61,6 +68,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		memset(&UART_MessageRecieved.data, 0x0u, 8);
 		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
 		return;
+		
 	}
 	else if (huart->Instance == USART3) {
 		HAL_IWDG_Refresh(&hiwdg1);
@@ -68,6 +76,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		if (UART_MessageRecieved.ID == 45  ) 
 		{
 			handleCamera(UART_MessageRecieved.data);
+		}
+		else if (UART_MessageRecieved.ID == 10  ) 
+		{
+			handleLED(UART_MessageRecieved.data);
+			Set_Max_Values(UART_MessageRecieved.data);
 		}
 		else
 		{
@@ -77,6 +90,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		memset(&UART_MessageRecieved.data, 0x0u, 8);
 		HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
 		return;
+		
 	}
 }
 
@@ -316,6 +330,7 @@ void UART_Decode(uint8_t* rawMessage) {
 		searching = 0;
 	}
 
+
 	/*Zamiana hex w ACSII na liczbe*/
 	if(rawMessage[0] == '#')
 	{
@@ -355,6 +370,7 @@ void UART_Decode(uint8_t* rawMessage) {
 		UART_MessageRecieved.lenght = index;
 
 	}
+	
 }
 
 
