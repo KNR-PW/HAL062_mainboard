@@ -18,7 +18,7 @@ TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim4;
 extern struct commands uartCommands;
 extern MessageTypeDef UART_MessageRecieved;
-static int cam_bridge[3] = {0};
+extern int cam_bridge[3] = {0,0,0};
 
 void Camera_Init(void)
 {
