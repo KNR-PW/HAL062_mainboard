@@ -287,13 +287,30 @@ void transferToCan1() {
 
 static void MessageTransferFromCAN(void)
 {
-	CAN_MessageRecieved.ID = RxHeader.Identifier;
+	static uint8_t length_LUT [256] = {
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [0; 20)
+			6, 5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [20; 40)
+			0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [40; 60)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [60; 80)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [80; 100)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [100; 120)
+			0, 0, 0, 0, 0, 0, 0, 0, 7, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [120; 140)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 4, 4,		// IDs - [140; 160)
+			4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [160; 180)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [180; 200)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [200; 220)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [220; 240)
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0					// IDs - [240; 255]
+	};
+
+	CAN_MessageRecieved.ID = RxHeader.Identifier & 0xFF;
+
+	CAN_MessageRecieved.lenght = length_LUT[CAN_MessageRecieved.ID];
 
 	for(uint8_t i = 0; i < 8; i++)
 	{
 		CAN_MessageRecieved.data[i] = RxData[i];
 	}
-	// TODO: Oszacowanie długości
 }
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
