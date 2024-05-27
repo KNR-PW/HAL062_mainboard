@@ -27,12 +27,10 @@ static FDCAN_TxHeaderTypeDef TxHeader_CAN1;
 static FDCAN_TxHeaderTypeDef TxHeader_CAN2;
 static volatile FDCAN_RxHeaderTypeDef RxHeader;
 
-static uint8_t testData[8] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
-static volatile RxData[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 /* Static variables -----------------------------------------------------------*/
 
 MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
-MessageTypeDef CAN_MessageRecieved;
+volatile MessageTypeDef CAN_MessageRecieved; //< Stores message from CAN (fdcan1 or fdcan2)
 
 /* Functions ------------------------------------------------------------------*/
 
@@ -175,33 +173,38 @@ void FDCAN2_Init(void) {
  */
 void Can_testMessage(void) {
 
+	uint8_t testData[8] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
+	uint8_t Test_ID = 0x01;
+	FDCAN_HandleTypeDef* hfdcan = &hfdcan1;
+	FDCAN_TxHeaderTypeDef* TestHeader = &TxHeader_CAN1;
+
 	//CAN1 frame seeting
-	TxHeader_CAN1.Identifier = 0x01;
-	TxHeader_CAN1.IdType = FDCAN_STANDARD_ID;
-	TxHeader_CAN1.TxFrameType = FDCAN_DATA_FRAME;
-	TxHeader_CAN1.DataLength = FDCAN_DLC_BYTES_8;
-	TxHeader_CAN1.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	TxHeader_CAN1.BitRateSwitch = FDCAN_BRS_ON;
-	TxHeader_CAN1.FDFormat = FDCAN_CLASSIC_CAN;
-	TxHeader_CAN1.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-	TxHeader_CAN1.MessageMarker = 0x0;
+	TestHeader->Identifier = Test_ID;
+	TestHeader->IdType = FDCAN_STANDARD_ID;
+	TestHeader->TxFrameType = FDCAN_DATA_FRAME;
+	TestHeader->DataLength = FDCAN_DLC_BYTES_8;
+	TestHeader->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	TestHeader->BitRateSwitch = FDCAN_BRS_ON;
+	TestHeader->FDFormat = FDCAN_CLASSIC_CAN;
+	TestHeader->TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	TestHeader->MessageMarker = 0x0;
 
 	//adding message to buffer
-	if (HAL_FDCAN_AddMessageToTxBuffer(&hfdcan1, &TxHeader_CAN1, testData,
+	if (HAL_FDCAN_AddMessageToTxBuffer(hfdcan, TestHeader, testData,
 	FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler();
 	}
 
 	//activating transmision request flag
-	hfdcan1.Instance->TXBAR = 0x1u;
+	hfdcan->Instance->TXBAR = 0x1u;
 
 	// Send Tx buffer message
-	if (HAL_FDCAN_EnableTxBufferRequest(&hfdcan1, FDCAN_TX_BUFFER0) != HAL_OK) {
+	if (HAL_FDCAN_EnableTxBufferRequest(hfdcan, FDCAN_TX_BUFFER0) != HAL_OK) {
 		Error_Handler();
 	}
 
 	// Polling for transmission complete on buffer index 0
-	while (HAL_FDCAN_IsTxBufferMessagePending(&hfdcan1, FDCAN_TX_BUFFER0) == 1) {
+	while (HAL_FDCAN_IsTxBufferMessagePending(hfdcan, FDCAN_TX_BUFFER0) == 1) {
 		__NOP();
 	}
 
@@ -285,7 +288,7 @@ void transferToCan1() {
 	Leds_toggleLed(LED5);
 }
 
-static void MessageTransferFromCAN(void)
+static void MessageDecodeFromCAN(uint8_t* RxData)
 {
 	static uint8_t length_LUT [256] = {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [0; 20)
@@ -307,7 +310,7 @@ static void MessageTransferFromCAN(void)
 
 	CAN_MessageRecieved.lenght = length_LUT[CAN_MessageRecieved.ID];
 
-	for(uint8_t i = 0; i < 8; i++)
+	for(uint8_t i = 0; i < CAN_MessageRecieved.lenght; i++)
 	{
 		CAN_MessageRecieved.data[i] = RxData[i];
 	}
@@ -315,8 +318,9 @@ static void MessageTransferFromCAN(void)
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
+	static uint8_t RxData[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData);
-	MessageTransferFromCAN();
+	MessageDecodeFromCAN(RxData);
 	asm("nop");
 }
 

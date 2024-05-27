@@ -44,6 +44,7 @@ int main(void) {
 
 	/* Loop forever */
 	while (1) {
+		// TODO: usuń to
 		Can_testMessage();
 		HAL_Delay(5000);
 	}
