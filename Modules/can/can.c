@@ -29,8 +29,8 @@ static volatile FDCAN_RxHeaderTypeDef RxHeader;
 
 /* Static variables -----------------------------------------------------------*/
 
-MessageTypeDef UART_MessageRecieved; //< Stores message from UART (bt or eth)
-volatile MessageTypeDef CAN_MessageRecieved; //< Stores message from CAN (fdcan1 or fdcan2)
+MessageTypeDef UART_MessageRecieved; //< Stores incomming message from UART (bt or eth)
+volatile MessageTypeDef CAN_MessageRecieved; //< Stores incomming message from CAN (fdcan1 or fdcan2)
 
 /* Functions ------------------------------------------------------------------*/
 
@@ -43,10 +43,9 @@ void FDCAN1_Init(void) {
 
 	FDCAN_FilterTypeDef sFilterConfig;
 
-	// TODO: Zienić tryb FDCAN1
 	hfdcan1.Instance = FDCAN1;
 	hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	hfdcan1.Init.Mode = FDCAN_MODE_EXTERNAL_LOOPBACK;
+	hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
 	hfdcan1.Init.AutoRetransmission = DISABLE;
 	hfdcan1.Init.TransmitPause = DISABLE;
 	hfdcan1.Init.ProtocolException = DISABLE;
@@ -109,10 +108,9 @@ void FDCAN2_Init(void) {
 
 	FDCAN_FilterTypeDef sFilterConfig;
 
-	// TODO: Zmienić tryb FDCAN2
 	hfdcan2.Instance = FDCAN2;
 	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-	hfdcan2.Init.Mode = FDCAN_MODE_EXTERNAL_LOOPBACK;
+	hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
 	hfdcan2.Init.AutoRetransmission = DISABLE;
 	hfdcan2.Init.TransmitPause = DISABLE;
 	hfdcan2.Init.ProtocolException = DISABLE;
@@ -288,8 +286,14 @@ void transferToCan1() {
 	Leds_toggleLed(LED5);
 }
 
+/**
+ ******************************************************************************
+ * @brief		Decodes incomming CAN Message into unified message format
+ ******************************************************************************
+ */
 static void MessageDecodeFromCAN(uint8_t* RxData)
 {
+	// Look-up table with all lengths of possible messages From ID space
 	static uint8_t length_LUT [256] = {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [0; 20)
 			6, 5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		// IDs - [20; 40)
@@ -316,6 +320,12 @@ static void MessageDecodeFromCAN(uint8_t* RxData)
 	}
 }
 
+
+/**
+ * *******************************************************************************
+ * @brief		:	FDCAN receiver handler
+ * *******************************************************************************
+*/
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
 	static uint8_t RxData[8] = {0, 0, 0, 0, 0, 0, 0, 0};
