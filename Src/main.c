@@ -23,8 +23,6 @@ void SystemClock_Config(void);
 */
 int main(void) {
 
-	__HAL_RCC_GPIOB_CLK_ENABLE(); //< TODO check if it is required
-
 	HAL_Init(); //< HAL library initialization
 	SystemClock_Config(); //< Configuration of system clock (AUTOGEN)
 
@@ -46,6 +44,7 @@ int main(void) {
 	TIM4_Init();
 	/* Loop forever */
 	while (1) {
+
 	}
 }
 
