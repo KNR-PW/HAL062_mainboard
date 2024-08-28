@@ -80,14 +80,14 @@ void TIM4_Init()
 	Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_TIMING;
-  sConfigOC.Pulse = 1000;
+  sConfigOC.Pulse = 1500;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
 	Error_Handler();
   }
-  sConfigOC.Pulse = 1500;
+  sConfigOC.Pulse = 1000;
   if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
 	Error_Handler();

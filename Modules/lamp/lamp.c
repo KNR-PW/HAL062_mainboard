@@ -9,7 +9,7 @@ uint8_t maxCounterRed = 0;
 uint8_t maxCounterBlue = 0;
 uint8_t maxCounterGreen = 0;
 
-void  Set_Max_Values(uint8_t *data)
+void  Set_Max_Value(uint8_t *data)
 { maxCounterRed = data[3];
   maxCounterBlue = data[4];
   maxCounterGreen = data[5];

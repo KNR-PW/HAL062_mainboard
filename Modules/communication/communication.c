@@ -35,7 +35,7 @@ uint8_t tutaj = 0u;
 
 
 DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart5_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 struct commands uartCommands;
 
@@ -58,7 +58,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		else if (UART_MessageRecieved.ID == 10  ) 
 		{
 			handleLED(UART_MessageRecieved.data);
-			Set_Max_Values(UART_MessageRecieved.data);
+			Set_Max_Value(UART_MessageRecieved.data);
 		}
 		else
 		{
@@ -66,7 +66,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		}
 		UART_MessageRecieved.ID = 0;
 		memset(&UART_MessageRecieved.data, 0x0u, 8);
-		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+		HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19);
 		return;
 		
 	}
@@ -80,7 +80,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		else if (UART_MessageRecieved.ID == 10  ) 
 		{
 			handleLED(UART_MessageRecieved.data);
-			Set_Max_Values(UART_MessageRecieved.data);
+			Set_Max_Value(UART_MessageRecieved.data);
 		}
 		else
 		{
@@ -179,6 +179,21 @@ bool BT_Init() {
 */
 bool Eth_Init() {
 
+	__HAL_RCC_DMA1_CLK_ENABLE();
+
+
+	  /* DMA interrupt init */
+	  /* DMA1_Stream0_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+	  /* DMA1_Stream1_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 115200;
 	ethHuart.Init.WordLength = UART_WORDLENGTH_8B;
@@ -186,23 +201,9 @@ bool Eth_Init() {
 	ethHuart.Init.StopBits = UART_STOPBITS_1;
 	ethHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	ethHuart.Init.Mode = UART_MODE_RX;
+	ethHuart.Init.Mode = UART_MODE_TX_RX;
 
-
-	//	Peripheral clock enable
-	__HAL_RCC_USART1_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-
-	ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
-	ethGpio.Mode = GPIO_MODE_AF_PP;
-	ethGpio.Alternate = GPIO_AF7_USART1;
-	ethGpio.Pull = GPIO_PULLDOWN;
-	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
-
-	HAL_GPIO_Init(GPIOA, &ethGpio);
-
-	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(USART1_IRQn);
+//	HAL_GPIO_Init(GPIOA, &ethGpio);
 
 	HAL_UART_Init(&ethHuart);
 	HAL_UARTEx_SetRxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
@@ -298,7 +299,7 @@ bool BT_ReceiveData() {
  * *******************************************************************************
 */
 bool Eth_ReceiveData() {
-	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
+	if (HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
 		return 0;
 	return 1;
 }
@@ -372,34 +373,6 @@ void UART_Decode(uint8_t* rawMessage) {
 	}
 	
 }
-
-
-/**
- * *******************************************************************************
- * @brief		:	TODO required after changing to DMC
- * *******************************************************************************
-*/
-void DMA_STR0_IRQHandler(void) {
-
-	HAL_DMA_IRQHandler(&hdma_usart1_rx);
-
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx,
-			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
-}
-
-/**
- * *******************************************************************************
- * @brief		:	TODO required after changing to DMC
- * *******************************************************************************
-*/
-void DMA_STR2_IRQHandler(void) {
-
-	HAL_DMA_IRQHandler(&hdma_usart5_rx);
-
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart5_rx,
-			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart5_rx));
-}
-
 
 /**
  * *******************************************************************************
