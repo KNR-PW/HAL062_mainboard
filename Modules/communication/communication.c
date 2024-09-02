@@ -240,7 +240,7 @@ void Watchdog_Init(void){
  * @see			:	UART frame documentation
  * *******************************************************************************
 */
-bool Eth_sendData(char *ID, char *info) {
+bool Eth_sendData(uint8_t *ID, uint8_t *info) {
 
 	uint8_t ethTxBuffer[19];
 	ethTxBuffer[0] = '#';
@@ -250,7 +250,7 @@ bool Eth_sendData(char *ID, char *info) {
 	for (uint8_t i = 0; i < 16; i++)
 		ethTxBuffer[i + 3] = info[i];
 
-	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, 1000) == HAL_OK) {
+	if (HAL_UART_Transmit_DMA(&ethHuart, ethTxBuffer, 19) == HAL_OK) {
 		return 0;
 	}
 	return 1;
@@ -276,7 +276,7 @@ bool BT_sendData(char *ID, char *info) {
 	for (uint8_t i = 0; i < 16; i++)
 		btTxBuffer[i + 3] = info[i];
 
-	if (HAL_UART_Transmit(&btHuart, btTxBuffer, 19, 1000) == HAL_OK) {
+	if (HAL_UART_Transmit_IT(&btHuart, btTxBuffer, 19) == HAL_OK) {
 		return 0;
 	}
 	return 1;
@@ -383,4 +383,13 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 
 	err_counter++;
 
+}
+
+
+
+void UART_encode(uint8_t value, uint8_t *hex) {
+    const uint8_t hex_digits[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+    hex[0] = hex_digits[(value >> 4) & 0x0F];  // High nibble
+    hex[1] = hex_digits[value & 0x0F];         // Low nibble
 }

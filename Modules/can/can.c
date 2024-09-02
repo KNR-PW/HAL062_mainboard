@@ -17,6 +17,7 @@
 #include "leds/leds.h"
 #include "can/can.h"
 #include "error_handlers/error_handlers.h"
+#include "communication/communication.h"
 
 /* Global variables -----------------------------------------------------------*/
 
@@ -351,8 +352,25 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 				/* Reception Error */
 				Error_Handler();
 			}
+//			uint8_t ID[2];
+//			uint8_t send[16];
+//			uint8_t hex[2];
+//			UART_encode((uint8_t)RxHeader.Identifier, ID);
+//			for(uint8_t i = 0; i<4;i++)
+//			{
+//
+//				UART_encode(RxMsg[i], hex);
+//				send[2*i] = hex[0];
+//				send[2*i+1] = hex[1];
+//			}
+////			for(uint8_t i = 0; i<(16-RxHeader.DataLength*2);i++)
+////			{
+////				send[i+RxHeader.DataLength*2] = 'x';
+////			}
+//			Eth_sendData(ID, send);
 
 			if (RxHeader.Identifier == 158) {
+
 				a1.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 						| (RxMsg[0] << 24);
 			} else if (RxHeader.Identifier == 159) {
@@ -409,6 +427,19 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 					else if (RxHeader.Identifier == 28) {
 						s6.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
+					}
+					else if (RxHeader.Identifier == 60) {
+						static uint8_t ID[2] = {0};
+						static uint8_t send[16] = {0};
+						static uint8_t hex[2] = {0};
+						UART_encode((uint8_t)RxHeader.Identifier, ID);
+						for(uint8_t i = 0; i<4;i++)
+						{
+							UART_encode(RxMsg[i], hex);
+							send[2*i] = hex[0];
+							send[2*i+1] = hex[1];
+						}
+						Eth_sendData(ID, send);
 					}
 					if (HAL_FDCAN_ActivateNotification(hfdcan,
 					FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {

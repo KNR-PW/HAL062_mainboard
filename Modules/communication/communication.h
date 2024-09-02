@@ -59,7 +59,7 @@ bool BT_sendData(char *ID, char *info);
  * @params info	:	Information to send (check frame documentation)
  * *******************************************************************************
 */
-bool Eth_sendData(char *ID, char *info);
+bool Eth_sendData(uint8_t *ID, uint8_t *info);
 
 /**
  * *******************************************************************************
@@ -90,6 +90,8 @@ bool BT_ReceiveData() ;
  * *******************************************************************************
 */
 void Watchdog_Init(void);
+
+void UART_encode(uint8_t value, uint8_t *hex);
 
 
 #endif // MODULE_COMMUNICATION_COMMUNICATION_H
