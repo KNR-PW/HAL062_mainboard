@@ -406,25 +406,25 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 						Error_Handler();
 					}
 
-					if (RxHeader.Identifier == 23) {
+					if (RxHeader.Identifier == 24) {
 						s1.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
-					} else if (RxHeader.Identifier == 24) {
+					} else if (RxHeader.Identifier == 25) {
 						s2.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
-					} else if (RxHeader.Identifier == 25) {
+					} else if (RxHeader.Identifier == 26) {
 						s3.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
 					}
-					else if (RxHeader.Identifier == 26) {
+					else if (RxHeader.Identifier == 27) {
 						s4.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
 					}
-					else if (RxHeader.Identifier == 27) {
+					else if (RxHeader.Identifier == 28) {
 						s5.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
 					}
-					else if (RxHeader.Identifier == 28) {
+					else if (RxHeader.Identifier == 29) {
 						s6.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
 								| (RxMsg[0] << 24);
 					}
