@@ -13,6 +13,8 @@
 #include <string.h>
 #include "can/can.h"
 #include "communication/communication.h"
+#include "camera/camera.h"
+#include "lamp/lamp.h"
 
 
 static GPIO_InitTypeDef ethGpio;
@@ -33,9 +35,10 @@ uint8_t tutaj = 0u;
 
 
 DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart5_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 struct commands uartCommands;
+
 
 
 
@@ -48,21 +51,48 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART1) {
 		HAL_IWDG_Refresh(&hiwdg1);
 		UART_Decode(UART_ReceivedRaw);
-
-		COM_RunUartAction(&UART_MessageRecieved);
+		if (UART_MessageRecieved.ID == 45  ) 
+		{
+			handleCamera(UART_MessageRecieved.data);
+		}
+		else if (UART_MessageRecieved.ID == 10  ) 
+		{
+			handleLED(UART_MessageRecieved.data);
+			Set_Max_Value(UART_MessageRecieved.data);
+		}
+		else
+		{
+			COM_RunUartAction(&UART_MessageRecieved);
+		}
 		UART_MessageRecieved.ID = 0;
 		memset(&UART_MessageRecieved.data, 0x0u, 8);
-		HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19);
+		HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19);
+		return;
+		
 	}
 	else if (huart->Instance == USART3) {
 		HAL_IWDG_Refresh(&hiwdg1);
 		UART_Decode(UART_ReceivedRaw);
-
-		COM_RunUartAction(&UART_MessageRecieved);
+		if (UART_MessageRecieved.ID == 45  ) 
+		{
+			handleCamera(UART_MessageRecieved.data);
+		}
+		else if (UART_MessageRecieved.ID == 10  ) 
+		{
+			handleLED(UART_MessageRecieved.data);
+			Set_Max_Value(UART_MessageRecieved.data);
+		}
+		else
+		{
+			COM_RunUartAction(&UART_MessageRecieved);
+		}
 		UART_MessageRecieved.ID = 0;
 		memset(&UART_MessageRecieved.data, 0x0u, 8);
 		HAL_UART_Receive_IT(&btHuart, UART_ReceivedRaw, 19);
+		return;
+		
 	}
+}
 
 //	if (huart->Instance == USART1) {
 //		UART_Decode(UART_ReceivedRaw);
@@ -101,7 +131,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 //			return;
 //		}
 //	}
-}
+//}
 
 /**
  * *******************************************************************************
@@ -149,6 +179,21 @@ bool BT_Init() {
 */
 bool Eth_Init() {
 
+	__HAL_RCC_DMA1_CLK_ENABLE();
+
+
+	  /* DMA interrupt init */
+	  /* DMA1_Stream0_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+	  /* DMA1_Stream1_IRQn interrupt configuration */
+	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+
 	ethHuart.Instance = USART1;
 	ethHuart.Init.BaudRate = 115200;
 	ethHuart.Init.WordLength = UART_WORDLENGTH_8B;
@@ -156,23 +201,9 @@ bool Eth_Init() {
 	ethHuart.Init.StopBits = UART_STOPBITS_1;
 	ethHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	ethHuart.Init.Mode = UART_MODE_RX;
+	ethHuart.Init.Mode = UART_MODE_TX_RX;
 
-
-	//	Peripheral clock enable
-	__HAL_RCC_USART1_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-
-	ethGpio.Pin = GPIO_PIN_9 | GPIO_PIN_10;
-	ethGpio.Mode = GPIO_MODE_AF_PP;
-	ethGpio.Alternate = GPIO_AF7_USART1;
-	ethGpio.Pull = GPIO_PULLDOWN;
-	ethGpio.Speed = GPIO_SPEED_FREQ_LOW;
-
-	HAL_GPIO_Init(GPIOA, &ethGpio);
-
-	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(USART1_IRQn);
+//	HAL_GPIO_Init(GPIOA, &ethGpio);
 
 	HAL_UART_Init(&ethHuart);
 	HAL_UARTEx_SetRxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
@@ -209,7 +240,7 @@ void Watchdog_Init(void){
  * @see			:	UART frame documentation
  * *******************************************************************************
 */
-bool Eth_sendData(char *ID, char *info) {
+bool Eth_sendData(uint8_t *ID, uint8_t *info) {
 
 	uint8_t ethTxBuffer[19];
 	ethTxBuffer[0] = '#';
@@ -219,7 +250,7 @@ bool Eth_sendData(char *ID, char *info) {
 	for (uint8_t i = 0; i < 16; i++)
 		ethTxBuffer[i + 3] = info[i];
 
-	if (HAL_UART_Transmit(&ethHuart, ethTxBuffer, 19, 1000) == HAL_OK) {
+	if (HAL_UART_Transmit_DMA(&ethHuart, ethTxBuffer, 19) == HAL_OK) {
 		return 0;
 	}
 	return 1;
@@ -245,7 +276,7 @@ bool BT_sendData(char *ID, char *info) {
 	for (uint8_t i = 0; i < 16; i++)
 		btTxBuffer[i + 3] = info[i];
 
-	if (HAL_UART_Transmit(&btHuart, btTxBuffer, 19, 1000) == HAL_OK) {
+	if (HAL_UART_Transmit_IT(&btHuart, btTxBuffer, 19) == HAL_OK) {
 		return 0;
 	}
 	return 1;
@@ -268,7 +299,7 @@ bool BT_ReceiveData() {
  * *******************************************************************************
 */
 bool Eth_ReceiveData() {
-	if (HAL_UART_Receive_IT(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
+	if (HAL_UART_Receive_DMA(&ethHuart, UART_ReceivedRaw, 19) == HAL_OK)
 		return 0;
 	return 1;
 }
@@ -299,6 +330,7 @@ void UART_Decode(uint8_t* rawMessage) {
 		}
 		searching = 0;
 	}
+
 
 	/*Zamiana hex w ACSII na liczbe*/
 	if(rawMessage[0] == '#')
@@ -339,35 +371,8 @@ void UART_Decode(uint8_t* rawMessage) {
 		UART_MessageRecieved.lenght = index;
 
 	}
+	
 }
-
-
-/**
- * *******************************************************************************
- * @brief		:	TODO required after changing to DMC
- * *******************************************************************************
-*/
-void DMA_STR0_IRQHandler(void) {
-
-	HAL_DMA_IRQHandler(&hdma_usart1_rx);
-
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart1_rx,
-			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart1_rx));
-}
-
-/**
- * *******************************************************************************
- * @brief		:	TODO required after changing to DMC
- * *******************************************************************************
-*/
-void DMA_STR2_IRQHandler(void) {
-
-	HAL_DMA_IRQHandler(&hdma_usart5_rx);
-
-	__HAL_DMA_CLEAR_FLAG(&hdma_usart5_rx,
-			__HAL_DMA_GET_TC_FLAG_INDEX(&hdma_usart5_rx));
-}
-
 
 /**
  * *******************************************************************************
@@ -378,4 +383,13 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 
 	err_counter++;
 
+}
+
+
+
+void UART_encode(uint8_t value, uint8_t *hex) {
+    const uint8_t hex_digits[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+    hex[0] = hex_digits[(value >> 4) & 0x0F];  // High nibble
+    hex[1] = hex_digits[value & 0x0F];         // Low nibble
 }

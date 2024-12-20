@@ -17,6 +17,7 @@
 #include "leds/leds.h"
 #include "can/can.h"
 #include "error_handlers/error_handlers.h"
+#include "communication/communication.h"
 
 /* Global variables -----------------------------------------------------------*/
 
@@ -27,7 +28,21 @@ FDCAN_TxHeaderTypeDef TxHeader_CAN1;
 FDCAN_TxHeaderTypeDef TxHeader_CAN2;
 FDCAN_RxHeaderTypeDef RxHeader;
 
+typedef union Angle {
+	uint32_t ui;
+	float f;
+} Angle;
+
+typedef union Speed {
+	uint32_t ui;
+	float f;
+} Speed;
+
+Angle a1, a2, a3, a4, a5, a6;
+Speed s1, s2, s3, s4, s5, s6;
+
 uint8_t testData[] = { 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xFA, 0xFB, 0xFC };
+uint8_t RxMsg[8];
 
 /* Static variables -----------------------------------------------------------*/
 
@@ -61,11 +76,11 @@ void FDCAN1_Init(void) {
 	hfdcan1.Init.MessageRAMOffset = 0;
 	hfdcan1.Init.StdFiltersNbr = 1;
 	hfdcan1.Init.ExtFiltersNbr = 0;
-	hfdcan1.Init.RxFifo0ElmtsNbr = 0;
+	hfdcan1.Init.RxFifo0ElmtsNbr = 1;
 	hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
 	hfdcan1.Init.RxFifo1ElmtsNbr = 0;
 	hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan1.Init.RxBuffersNbr = 1;
+	hfdcan1.Init.RxBuffersNbr = 0;
 	hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
 	hfdcan1.Init.TxEventsNbr = 0;
 	hfdcan1.Init.TxBuffersNbr = 1;
@@ -79,14 +94,10 @@ void FDCAN1_Init(void) {
 	/* Configure standard ID reception filter to Rx buffer 0 */
 	sFilterConfig.IdType = FDCAN_STANDARD_ID;
 	sFilterConfig.FilterIndex = 0;
-#if 0
-  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x2; // ID Node2
-#if 0
-  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
+	sFilterConfig.FilterType = FDCAN_FILTER_RANGE; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+	sFilterConfig.FilterID1 = 0x00000000; // ID Node2
+	sFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
 	sFilterConfig.RxBufferIndex = 0;
 	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK) {
 		Error_Handler();
@@ -97,6 +108,7 @@ void FDCAN1_Init(void) {
 		Error_Handler();
 	}
 
+	HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
 }
 
 /**
@@ -126,11 +138,11 @@ void FDCAN2_Init(void) {
 	hfdcan2.Init.MessageRAMOffset = 0;
 	hfdcan2.Init.StdFiltersNbr = 1;
 	hfdcan2.Init.ExtFiltersNbr = 0;
-	hfdcan2.Init.RxFifo0ElmtsNbr = 0;
+	hfdcan2.Init.RxFifo0ElmtsNbr = 1;
 	hfdcan2.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
 	hfdcan2.Init.RxFifo1ElmtsNbr = 0;
 	hfdcan2.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-	hfdcan2.Init.RxBuffersNbr = 1;
+	hfdcan2.Init.RxBuffersNbr = 0;
 	hfdcan2.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
 	hfdcan2.Init.TxEventsNbr = 0;
 	hfdcan2.Init.TxBuffersNbr = 1;
@@ -144,14 +156,13 @@ void FDCAN2_Init(void) {
 	/* Configure standard ID reception filter to Rx buffer 0 */
 	sFilterConfig.IdType = FDCAN_STANDARD_ID;
 	sFilterConfig.FilterIndex = 0;
-#if 0
-  sFilterConfig.FilterType = FDCAN_FILTER_DUAL; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
+
+	sFilterConfig.FilterType = FDCAN_FILTER_RANGE; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+
 	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x2; // ID Node2
-#if 0
-  sFilterConfig.FilterID2 = 0x0; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-#endif
+	sFilterConfig.FilterID1 = 0x00000000; // ID Node2
+
+	sFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
 	sFilterConfig.RxBufferIndex = 0;
 	if (HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig) != HAL_OK) {
 		Error_Handler();
@@ -161,6 +172,8 @@ void FDCAN2_Init(void) {
 	if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
 		Error_Handler();
 	}
+
+	HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
 }
 
 /**
@@ -328,5 +341,112 @@ void transferToCan2() {
 	// Toggle LED4 to know that message was sent
 	Leds_toggleLed(LED4);
 
+}
+
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
+	if (hfdcan->Instance == FDCAN1) {
+		if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+
+			if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxMsg)
+					!= HAL_OK) {
+				/* Reception Error */
+				Error_Handler();
+			}
+//			uint8_t ID[2];
+//			uint8_t send[16];
+//			uint8_t hex[2];
+//			UART_encode((uint8_t)RxHeader.Identifier, ID);
+//			for(uint8_t i = 0; i<4;i++)
+//			{
+//
+//				UART_encode(RxMsg[i], hex);
+//				send[2*i] = hex[0];
+//				send[2*i+1] = hex[1];
+//			}
+////			for(uint8_t i = 0; i<(16-RxHeader.DataLength*2);i++)
+////			{
+////				send[i+RxHeader.DataLength*2] = 'x';
+////			}
+//			Eth_sendData(ID, send);
+
+			if (RxHeader.Identifier == 158) {
+
+				a1.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+						| (RxMsg[0] << 24);
+			} else if (RxHeader.Identifier == 159) {
+				a2.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+						| (RxMsg[0] << 24);
+			} else if (RxHeader.Identifier == 160) {
+				a3.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+						| (RxMsg[0] << 24);
+			} else if (RxHeader.Identifier == 161) {
+				a4.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+						| (RxMsg[0] << 24);
+			} else if (RxHeader.Identifier == 162) {
+				a5.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+						| (RxMsg[0] << 24);
+			} else if (RxHeader.Identifier == 163) {
+				a6.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+						| (RxMsg[0] << 24);
+			}
+			if (HAL_FDCAN_ActivateNotification(hfdcan,
+			FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
+				/* Notification Error */
+				Error_Handler();
+			}
+		}
+	}
+	else if(hfdcan->Instance == FDCAN2)
+	{
+		if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+
+					if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxMsg)
+							!= HAL_OK) {
+						/* Reception Error */
+						Error_Handler();
+					}
+
+					if (RxHeader.Identifier == 24) {
+						s1.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+								| (RxMsg[0] << 24);
+					} else if (RxHeader.Identifier == 25) {
+						s2.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+								| (RxMsg[0] << 24);
+					} else if (RxHeader.Identifier == 26) {
+						s3.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+								| (RxMsg[0] << 24);
+					}
+					else if (RxHeader.Identifier == 27) {
+						s4.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+								| (RxMsg[0] << 24);
+					}
+					else if (RxHeader.Identifier == 28) {
+						s5.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+								| (RxMsg[0] << 24);
+					}
+					else if (RxHeader.Identifier == 29) {
+						s6.ui = RxMsg[3] | (RxMsg[2] << 8) | (RxMsg[1] << 16)
+								| (RxMsg[0] << 24);
+					}
+					else if (RxHeader.Identifier == 60) {
+						static uint8_t ID[2] = {0};
+						static uint8_t send[16] = {0};
+						static uint8_t hex[2] = {0};
+						UART_encode((uint8_t)RxHeader.Identifier, ID);
+						for(uint8_t i = 0; i<4;i++)
+						{
+							UART_encode(RxMsg[i], hex);
+							send[2*i] = hex[0];
+							send[2*i+1] = hex[1];
+						}
+						Eth_sendData(ID, send);
+					}
+					if (HAL_FDCAN_ActivateNotification(hfdcan,
+					FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
+						/* Notification Error */
+						Error_Handler();
+					}
+				}
+	}
 }
 

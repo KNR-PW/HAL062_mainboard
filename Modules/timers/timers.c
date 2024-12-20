@@ -13,12 +13,18 @@
 #include "communication/communication.h"
 #include "can/can.h"
 #include "timers.h"
-
+#include "lamp/lamp.h"
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim4;
 extern struct commands uartCommands;
 extern MessageTypeDef UART_MessageRecieved;
-static int cam_bridge[3] = {0};
+int cam_bridge[3] = {0,0,0};
+extern uint8_t Counter_red;
+extern uint8_t Counter_blue;
+extern uint8_t Counter_green;
+extern uint8_t maxCounterRed ;
+extern uint8_t maxCounterBlue ;
+extern uint8_t maxCounterGreen ;
 
 void Camera_Init(void)
 {
@@ -74,14 +80,14 @@ void TIM4_Init()
 	Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_TIMING;
-  sConfigOC.Pulse = 1000;
+  sConfigOC.Pulse = 1500;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
 	Error_Handler();
   }
-  sConfigOC.Pulse = 1500;
+  sConfigOC.Pulse = 1000;
   if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
 	Error_Handler();
@@ -134,11 +140,37 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		return;
 	}
-	else if(htim == &htim4)
+	else if(htim->Instance == TIM4)
 	{
     HAL_GPIO_WritePin(CAM_STER1_GPIO_Port, CAM_STER1_Pin, 1);
     HAL_GPIO_WritePin(CAM_STER2_GPIO_Port, CAM_STER2_Pin, 1);
     HAL_GPIO_WritePin(CAM_STER3_GPIO_Port, CAM_STER3_Pin, 1);
+	}
+	else if(htim->Instance == TIM16)
+	{
+		Counter_red++;
+		    Counter_blue++;
+		    Counter_green++;
+
+		    // Sprawdzenie, czy osiągnięto wartości maksymalne
+		    if (Counter_red == maxCounterRed) {
+		        // Zmiana stanu diody czerwonej
+		        HAL_GPIO_TogglePin(LED_PORT, LED1_PIN);
+		        // Resetowanie licznika
+		        Counter_red = 0;
+		    }
+		    if (Counter_blue == maxCounterBlue) {
+		        // Zmiana stanu diody niebieskiej
+		        HAL_GPIO_TogglePin(LED_PORT, LED2_PIN);
+		        // Resetowanie licznika
+		        Counter_blue = 0;
+		    }
+		    if (Counter_green == maxCounterGreen) {
+		        // Zmiana stanu diody zielonej
+		        HAL_GPIO_TogglePin(LED_PORT, LED3_PIN);
+		        // Resetowanie licznika
+		        Counter_green = 0;
+		    }
 	}
  }
 

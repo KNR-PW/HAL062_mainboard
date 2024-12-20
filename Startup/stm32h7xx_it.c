@@ -12,6 +12,8 @@ extern UART_HandleTypeDef ethHuart;
 extern UART_HandleTypeDef btHuart;
 extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim4;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart1_tx;
 
 void NMI_Handler(void) {
 	while (1) {
@@ -122,3 +124,15 @@ void TIM4_IRQHandler()
 {
   HAL_TIM_IRQHandler(&htim4);
 }
+
+void DMA_STR0_IRQHandler(void)
+{
+
+  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+
+}
+void DMA_STR1_IRQHandler (void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart1_tx);
+}
+
