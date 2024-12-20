@@ -15,6 +15,7 @@
 #include "communication/communication.h"
 #include "camera/camera.h"
 #include "lamp/lamp.h"
+#include "error_handlers/error_handlers.h"
 
 
 static GPIO_InitTypeDef ethGpio;

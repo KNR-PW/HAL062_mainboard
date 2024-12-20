@@ -1,6 +1,7 @@
 #include <stm32h7xx_hal.h>
 #include <string.h>
 #include <lamp/lamp.h>
+#include "error_handlers/error_handlers.h"
 
 uint8_t Counter_red = 0;
 uint8_t Counter_blue = 0;
