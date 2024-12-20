@@ -49,7 +49,7 @@ struct commands uartCommands;
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart->Instance == USART1) {
-		HAL_IWDG_Refresh(&hiwdg1);
+//		HAL_IWDG_Refresh(&hiwdg1);
 		UART_Decode(UART_ReceivedRaw);
 		if (UART_MessageRecieved.ID == 45  ) 
 		{
@@ -71,7 +71,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		
 	}
 	else if (huart->Instance == USART3) {
-		HAL_IWDG_Refresh(&hiwdg1);
+//		HAL_IWDG_Refresh(&hiwdg1);
 		UART_Decode(UART_ReceivedRaw);
 		if (UART_MessageRecieved.ID == 45  ) 
 		{

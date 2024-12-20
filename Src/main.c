@@ -13,6 +13,7 @@
 #include "communication/communication.h"
 #include "error_handlers/error_handlers.h"
 #include "timers/timers.h"
+#include "uart/uart.h"
 
 void SystemClock_Config(void);
 
@@ -40,12 +41,16 @@ int main(void) {
 	BT_Init(); //< Initialization of UART bluetooth
 	BT_ReceiveData(); //< Starting listening on bluetooth uart pins
 
-	Watchdog_Init(); //< Starting watchdog to prevent communication lost
+//	Watchdog_Init(); //< Starting watchdog to prevent communication lost
 
 	Camera_Init();
 	TIM4_Init();
+
+	UART_Init();
+
 	/* Loop forever */
 	while (1) {
+
 	}
 }
 

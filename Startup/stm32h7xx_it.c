@@ -5,6 +5,7 @@
 #include "leds/leds.h"
 #include "can/can.h"
 #include "communication/communication.h"
+#include "uart/uart.h"
 
 extern FDCAN_HandleTypeDef hfdcan2;
 extern FDCAN_HandleTypeDef hfdcan1;
@@ -14,6 +15,7 @@ extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim4;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
+extern UART_HandleTypeDef huart6;
 
 void NMI_Handler(void) {
 	while (1) {
@@ -136,3 +138,7 @@ void DMA_STR1_IRQHandler (void)
   HAL_DMA_IRQHandler(&hdma_usart1_tx);
 }
 
+void USART6_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart6);
+}
