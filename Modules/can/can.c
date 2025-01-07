@@ -6,7 +6,7 @@
  ******************************************************************************
  */
 
-/* Includes ------------------------------------------------------------------*/
+/* Includes -------------------------------------------------------------------*/
 
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal_cortex.h>
@@ -359,7 +359,7 @@ static void CAN2_processFifo0() {
 		Eth_sendData((uint8_t) RxHeader.Identifier, RxMsg, 4);
 		break;
 
-	case 68: // test error
+	case 71 ... 72: // sensorboard, motorboard
 		Eth_sendData((uint8_t) RxHeader.Identifier, RxMsg, 1);
 		BT_sendData((uint8_t) RxHeader.Identifier, RxMsg, 1);
 		break;

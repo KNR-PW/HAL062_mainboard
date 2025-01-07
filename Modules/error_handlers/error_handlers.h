@@ -9,7 +9,8 @@
 #ifndef ERROR_HANDLERS_ERROR_HANDLERS_H_
 #define ERROR_HANDLERS_ERROR_HANDLERS_H_
 
-#define MAINBOARD_ERROR_ID ((uint8_t) 0x69)
+#define MAINBOARD_ERROR_ID ((uint8_t) 70)
+#define DEBUG_LEDS
 
 typedef enum {
 	MAINError_test,
@@ -108,7 +109,5 @@ typedef enum {
  ****************************************************************************** 
  */
 void Error_Handler(Error_function error_func, Error_code error_code);
-
-// void can_error_to_uart(uint8_t *message, uint8_t ID);
 
 #endif /* ERROR_HANDLERS_ERROR_HANDLERS_H_ */

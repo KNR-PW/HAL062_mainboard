@@ -29,7 +29,7 @@ int main(void) {
 	SystemClock_Config(); //< Configuration of system clock (AUTOGEN)
 
 	Leds_init(); //< Initialization of LEDs pins
-	Leds_welcomeFLash(); //< All LEDs flash (test LEDs performance)
+	Leds_welcomeFLash(); //< All LEDs flash (test LEDs performance)	
 
 	CAN1_Init(); //< Initialization of CAN1 - rail (motorboards, sensorboards)
 	CAN2_Init(); //< Initialization of CAN 2 - manip/labo

@@ -30,6 +30,9 @@ UART_HandleTypeDef ethHuart;
 DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart1_tx;
 
+IWDG_HandleTypeDef hiwdg1;
+
+
 /* Extern variables -----------------------------------------------------------*/
 
 extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing message
@@ -37,8 +40,6 @@ extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing me
 /* Static variables -----------------------------------------------------------*/
 
 static uint32_t err_counter = 0;
-static IWDG_HandleTypeDef hiwdg1;
-
 static uint8_t UART_ReceivedRaw[19]; // check frame documentation
 static uint8_t searching = 0u;
 static uint8_t magnetosearching = 0u; // UNUSED

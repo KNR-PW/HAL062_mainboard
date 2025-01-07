@@ -58,9 +58,7 @@ oparciu o dane z niej
 		data = 3  - resetuje ca�y sterownik
 
 
-
-
-##Plytka do kamer
+## Plytka do kamer
 1. START/STOP/Pozycja
 * ID - 45
 * data[0] - pozycja w pionie -100  - 100 (zadajesz pozycj�)
@@ -68,16 +66,31 @@ oparciu o dane z niej
 * data[3] - zabij to g�wno (jak wy�lesz 0x01 to wy��czy nap�dy) (na wypadek jakby co� posz�o nie tak mocno), (jak wy�lesz 0x02 to zresetujesz p�ytk�)
 
 
-##Magnetometr
+## Magnetometr
 Float jako 4 bajty
 * ID = 50
 * data [0] - MSB
 * ...
 * data[3] - LSB
-##Autonomia
+
+
+## Autonomia
 Mryganie lampkami
 * ID = 51
 * data [0] - 1 - zapala lampke, cokowlwiek innego - gasi
+
+
+## Error handling
+* data[0] - Error code (see error\_handlers.h Error\_code enum)
+
+1. Mainboard
+* ID = 70
+
+2. Sensorboard
+* ID = 71
+
+3. Motorboard
+* ID = 72
 
 
 ## Manipulator (ID 128-191)
