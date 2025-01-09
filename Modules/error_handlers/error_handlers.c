@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file           : error_handlers.c
  * @author         : Jacek Prokopczuk, Krystian Czechowicz, Adam Rybojad
- * @brief          : Handling all errors that is detected TODO
+ * @brief          : Handling all errors that are detected
  ******************************************************************************
  */
 
@@ -176,9 +176,14 @@ void Error_Handler(Error_function error_func, Error_code error_code) {
  * If DEBUG_LEDS is not defined function resets the board
  ******************************************************************************
  */
-[[noreturn]]
 static void critical_handle(Error_code error_code) {
-#ifdef DEBUG_LEDS	
+
+#ifdef FEATURE_LED_ALIVE_DISPLAY
+	extern bool alive_display_state;
+	alive_display_state = 0;
+#endif
+
+#ifdef FEATURE_DEBUG_LEDS
 
 	extern IWDG_HandleTypeDef hiwdg1;
 	HAL_IWDG_Refresh(&hiwdg1);

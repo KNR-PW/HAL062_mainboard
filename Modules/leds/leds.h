@@ -20,6 +20,8 @@
 #define LED_ALL LED_1 | LED_2 | LED_3 | LED_4 | LED_5 
 #define LED_PORT GPIOG
 
+#define FEATURE_LED_ALIVE_DISPLAY
+#define FEATURE_DEBUG_LEDS
 /* Functions ------------------------------------------------------------------*/
 
 /*
