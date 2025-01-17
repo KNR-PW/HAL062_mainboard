@@ -9,7 +9,7 @@
 #ifndef MODULES_LEDS_LEDS_H
 #define MODULES_LEDS_LEDS_H
 
-/* MACROS ------------------------------------------------------------------*/
+/* MACROS ---------------------------------------------------------------------*/
 
 // High level macros to handle predefined LEDs on PCB
 #define LED_1	GPIO_PIN_2
@@ -22,6 +22,7 @@
 
 #define FEATURE_LED_ALIVE_DISPLAY
 #define FEATURE_DEBUG_LEDS
+
 /* Functions ------------------------------------------------------------------*/
 
 /*

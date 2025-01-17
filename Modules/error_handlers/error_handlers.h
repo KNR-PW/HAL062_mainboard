@@ -12,7 +12,7 @@
 #define MAINBOARD_ERROR_ID ((uint8_t) 70)
 
 typedef enum {
-	MAINError_test,
+	TESTError,
 	CAN1Error_init,
 	CAN1Error_configFilter,
 	CAN1Error_start,
@@ -60,7 +60,7 @@ typedef enum {
 
 typedef enum {
 	ErrorHandler_noErrorFunc,
-	MAINEErrorFunc_test,
+	TESTEErrorFunc,
 	CAN1ErrorFunc_init,
 	CAN1ErrorFunc_transfer,
 	CAN1ErrorFunc_fifo,
@@ -104,7 +104,10 @@ typedef enum {
  * Does Not influence the error code sent outside via coms
  *
  * @param error_code  solely responsible for the error code sent outside
- * Does Not influence the behavior of error handling  
+ * Does Not influence the behavior of error handling 
+ *
+ * May produce unexpected behavior if some process failed 
+ * without finalizing an important procedure (ex. leaving a file open)
  ****************************************************************************** 
  */
 void Error_Handler(Error_function error_func, Error_code error_code);

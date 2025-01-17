@@ -64,9 +64,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	UART_Decode(UART_ReceivedRaw);
 
 	switch (UART_MessageRecieved.ID) {
-	case 0:
-		break;
-
 	case 10:
 		Lamp_handle(UART_MessageRecieved.data);
 		Lamp_setMaxValue(UART_MessageRecieved.data);
@@ -74,6 +71,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
 	case 45:
 		Cam_handle(UART_MessageRecieved.data);
+		break;
+
+	case 70: // testing error recovery and reply
+		Error_Handler(TESTEErrorFunc, TESTError);
+		break;
+
+	case 71: // testing critical error handling
+		Error_Handler(COMErrorFunc_watchdogInit, COMError_watchdogInit);
 		break;
 
 	default:

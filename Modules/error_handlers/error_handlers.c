@@ -15,7 +15,6 @@
 
 #include "timers/timers.h"
 #include "can/can.h"
-#include <stm32h7xx_hal.h>
 
 /* Static variables -----------------------------------------------------------*/
 
@@ -62,7 +61,7 @@ void Error_Handler(Error_function error_func, Error_code error_code) {
 		ERROR_ACTIVE = 0;
 		break;
 
-	case MAINEErrorFunc_test:
+	case TESTEErrorFunc:
 		ERROR_ACTIVE = 0;
 		break;
 

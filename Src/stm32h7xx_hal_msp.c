@@ -325,5 +325,4 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 		 */
 		HAL_GPIO_DeInit(GPIOD, GPIO_PIN_8 | GPIO_PIN_9);
 	}
-
 }
