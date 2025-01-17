@@ -200,6 +200,7 @@ static void critical_handle(Error_code error_code) {
 	if (error_code & 0b01000000) {owerflow_leds |= LED_2;}
 	if (error_code & 0b10000000) {owerflow_leds |= LED_3;}
 
+	__enable_irq(); //check if this is needed
 	while (1) {
 		HAL_IWDG_Refresh(&hiwdg1);
 		HAL_Delay(1000);

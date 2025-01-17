@@ -73,14 +73,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		Cam_handle(UART_MessageRecieved.data);
 		break;
 
-	case 70: // testing error recovery and reply
-		Error_Handler(TESTEErrorFunc, TESTError);
-		break;
-
-	case 71: // testing critical error handling
-		Error_Handler(COMErrorFunc_watchdogInit, COMError_watchdogInit);
-		break;
-
 	default:
 		COM_RunUartAction(&UART_MessageRecieved);
 		break;
@@ -151,14 +143,14 @@ bool Eth_Init() {
 
 	/* DMA interrupt init */
 	/* DMA1_Stream0_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
 	/* DMA1_Stream1_IRQn interrupt configuration */
-	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 
 	/* USART1 interrupt Init */
-	HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+	HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ(USART1_IRQn);
 
 	ethHuart.Instance = USART1;

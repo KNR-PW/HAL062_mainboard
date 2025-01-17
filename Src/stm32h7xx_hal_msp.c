@@ -287,7 +287,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
 		GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
 		HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-		HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+		HAL_NVIC_SetPriority(USART3_IRQn, 1, 0);
 		HAL_NVIC_EnableIRQ(USART3_IRQn);
 
 	}
