@@ -1,4 +1,16 @@
-Debug/
+# STM32Cube
 .settings/
-*.launch
+.mxproject
+
+# Build
+Debug/
+
+# Visual Studio Code
 .vscode/
+
+# Jet Brains
+.idea/
+cmake-build-debug/
+
+# Other
+*.launch
