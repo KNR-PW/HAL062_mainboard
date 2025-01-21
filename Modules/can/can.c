@@ -14,10 +14,10 @@
 #include <stm32h7xx_hal_fdcan.h>
 #include <stm32h7xx_hal.h>
 #include <string.h>
-#include "leds/leds.h"
-#include "can/can.h"
-#include "error_handlers/error_handlers.h"
-#include "communication/communication.h"
+#include "leds.h"
+#include "can.h"
+#include "error_handlers.h"
+#include "communication.h"
 
 /* Global variables -----------------------------------------------------------*/
 

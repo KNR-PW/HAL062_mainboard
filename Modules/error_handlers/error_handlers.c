@@ -10,8 +10,8 @@
 /* Includes ------------------------------------------------------------------- */
 
 #include <stm32h7xx_hal.h>
-#include "error_handlers/error_handlers.h"
-#include "leds/leds.h"
+#include "error_handlers.h"
+#include "leds.h"
 
 
 /* Functions ------------------------------------------------------------------- */

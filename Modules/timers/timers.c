@@ -9,11 +9,11 @@
 #include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_tim.h>
 #include <string.h>
-#include "error_handlers/error_handlers.h"
-#include "communication/communication.h"
-#include "can/can.h"
+#include "error_handlers.h"
+#include "communication.h"
+#include "can.h"
 #include "timers.h"
-#include "lamp/lamp.h"
+#include "lamp.h"
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim4;
 extern struct commands uartCommands;

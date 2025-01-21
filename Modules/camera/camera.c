@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "timers/timers.h"
+#include "timers.h"
 
 extern int cam_bridge[3];
 

@@ -12,7 +12,7 @@
 #include <stm32h7xx_hal_rcc.h>
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal.h>
-#include "leds/leds.h"
+#include "leds.h"
 
 
 /* Functions ------------------------------------------------------------------*/
