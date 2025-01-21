@@ -9,6 +9,7 @@
 
 /* Includes ------------------------------------------------------------------- */
 
+#include "init_interface.h"
 #include <stm32h7xx_hal.h>
 #include "error_handlers.h"
 #include "leds.h"
@@ -22,7 +23,7 @@
  * @details			:	Error handling - turn off leds and while loop
  ******************************************************************************
  */
-void Error_Handler(void) {
+void Init_Error_Handler(void) {
 	/// TODO: FInish Error handler!
 	__disable_irq();
 

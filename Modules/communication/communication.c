@@ -12,10 +12,10 @@
 #include <stm32h7xx_hal.h>
 #include <string.h>
 #include "can.h"
-#include "communication/communication.h"
-#include "camera/camera.h"
-#include "lamp/lamp.h"
-#include "error_handlers/error_handlers.h"
+#include "communication.h"
+#include "camera.h"
+#include "lamp.h"
+#include "error_handlers.h"
 
 
 static GPIO_InitTypeDef ethGpio;

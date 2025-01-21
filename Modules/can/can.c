@@ -8,6 +8,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "main.h"
 #include <stm32h7xx_hal_gpio.h>
 #include <stm32h7xx_hal_cortex.h>
 #include <stm32h7xx_hal_rcc.h>
