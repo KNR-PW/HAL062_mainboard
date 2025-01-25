@@ -8,7 +8,7 @@
 #include <stdbool.h>
 
 #include "main.h"
-#include "init_interface.h"
+#include "cube_interface.h"
 
 #include "leds.h"
 #include "can.h"
@@ -27,10 +27,9 @@ int main(void) {
 	__HAL_RCC_GPIOB_CLK_ENABLE(); //< TODO check if it is required
 
 	HAL_Init(); //< HAL library initialization
-	Init_SystemClock_Config(); //< Configuration of system clock (AUTOGEN)
+	Cube_SystemClock_Config(); //< Configuration of system clock (AUTOGEN)
 
-//	Leds_init(); //< Initialization of LEDs pins
-	Init_MX_GPIO_Init();
+	Leds_init(); //< Initialization of LEDs pins
 	Leds_welcomeFLash(); //< All LEDs flash (test LEDs performance)
 
 	FDCAN1_Init(); //< Initialization of CAN1 - rail (motorboards, sensorboards)

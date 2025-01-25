@@ -9,7 +9,7 @@
 
 /* Includes ------------------------------------------------------------------- */
 
-#include "init_interface.h"
+#include "cube_interface.h"
 #include <stm32h7xx_hal.h>
 #include "error_handlers.h"
 #include "leds.h"
@@ -23,7 +23,7 @@
  * @details			:	Error handling - turn off leds and while loop
  ******************************************************************************
  */
-void Init_Error_Handler(void) {
+void Cube_Error_Handler(void) {
 	/// TODO: FInish Error handler!
 	__disable_irq();
 

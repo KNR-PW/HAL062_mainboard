@@ -10,15 +10,16 @@
 #include <stm32h7xx_hal.h>
 #include <stm32h7xx_hal_tim.h>
 #include <string.h>
+
+#include "cube_interface.h"
 #include "error_handlers.h"
 #include "communication.h"
 #include "can.h"
 #include "timers.h"
 #include "lamp.h"
-TIM_HandleTypeDef htim7;
-TIM_HandleTypeDef htim4;
+
+
 extern struct commands uartCommands;
-extern MessageTypeDef UART_MessageRecieved;
 int cam_bridge[3] = {0,0,0};
 extern uint8_t Counter_red;
 extern uint8_t Counter_blue;
@@ -49,55 +50,8 @@ void Camera_Init(void)
 
 void TIM4_Init()
 {
+  Cube_MX_TIM4_Init();
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 80;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 20000;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
-  {
-	Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
-  {
-	Error_Handler();
-  }
-  if (HAL_TIM_OC_Init(&htim4) != HAL_OK)
-  {
-	Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
-  {
-	Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
-  sConfigOC.Pulse = 1500;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-	Error_Handler();
-  }
-  sConfigOC.Pulse = 1000;
-  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-	Error_Handler();
-  }
-  sConfigOC.Pulse = 2000;
-  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-	Error_Handler();
-  }
   HAL_TIM_Base_Start_IT(&htim4);
   HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_1);
   HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_2);
@@ -107,26 +61,7 @@ void TIM4_Init()
 
 void TIM7_Init()
 {
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-
-  htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 704-1;
-  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 1000-1;
-  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  Cube_MX_TIM7_Init();
 
   HAL_TIM_Base_Start_IT(&htim7);
 }

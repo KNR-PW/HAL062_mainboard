@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "init_interface.h"
+#include "cube_interface.h"
 
 /* USER CODE END Includes */
 
@@ -52,6 +52,8 @@ TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 /* USER CODE BEGIN PV */
 
@@ -60,6 +62,7 @@ UART_HandleTypeDef huart3;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_FDCAN1_Init(void);
 static void MX_FDCAN2_Init(void);
 static void MX_USART1_UART_Init(void);
@@ -73,32 +76,40 @@ static void MX_TIM7_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void Init_SystemClock_Config(void){
+void Cube_SystemClock_Config(void){
 	SystemClock_Config();
 }
 
-void Init_MX_GPIO_Init(void){
+void Cube_MX_GPIO_Init(void){
 	MX_GPIO_Init();
 }
 
-void Init_MX_FDCAN1_Init(void){
+void Cube_MX_FDCAN1_Init(void){
 	MX_FDCAN1_Init();
 }
 
-void Init_MX_FDCAN2_Init(void){
+void Cube_MX_FDCAN2_Init(void){
 	MX_FDCAN2_Init();
 }
 
-void Init_MX_USART1_UART_Init(void){
+void Cube_MX_USART1_UART_Init(void){
 	MX_USART1_UART_Init();
 }
 
-void Init_MX_IWDG1_Init(void){
+void Cube_MX_IWDG1_Init(void){
 	MX_IWDG1_Init();
 }
 
-void Init_MX_USART3_UART_Init(void){
+void Cube_MX_USART3_UART_Init(void){
 	MX_USART3_UART_Init();
+}
+
+void Cube_MX_TIM4_Init(void) {
+  MX_TIM4_Init();
+}
+
+void Cube_MX_TIM7_Init(void) {
+  MX_TIM7_Init();
 }
 
 /* USER CODE END 0 */
@@ -367,7 +378,6 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
-  HAL_TIM_MspPostInit(&htim4);
 
 }
 
@@ -389,9 +399,9 @@ static void MX_TIM7_Init(void)
 
   /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 704;
+  htim7.Init.Prescaler = 703;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 1000;
+  htim7.Init.Period = 999;
   htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
   {
@@ -506,6 +516,25 @@ static void MX_USART3_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -518,14 +547,25 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, CAM_STER3_Pin|CAM_STER2_Pin|CAM_STER1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, LED_1_Pin|LED_2_Pin|LED_3_Pin|LED_4_Pin
                           |LED_5_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : CAM_STER3_Pin CAM_STER2_Pin CAM_STER1_Pin */
+  GPIO_InitStruct.Pin = CAM_STER3_Pin|CAM_STER2_Pin|CAM_STER1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED_1_Pin LED_2_Pin LED_3_Pin LED_4_Pin
                            LED_5_Pin */
@@ -553,7 +593,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
-  Init_Error_Handler();
+  Cube_Error_Handler();
   while (1)
   {
   }

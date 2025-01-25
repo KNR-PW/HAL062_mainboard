@@ -11,6 +11,8 @@
 
 #include <stm32h7xx_hal.h>
 #include <string.h>
+#include "cube_interface.h"
+
 #include "can.h"
 #include "communication.h"
 #include "camera.h"
@@ -18,29 +20,18 @@
 #include "error_handlers.h"
 
 
-static GPIO_InitTypeDef ethGpio;
-static GPIO_InitTypeDef btGpio;
-
 static uint32_t err_counter = 0;
 extern MessageTypeDef UART_MessageRecieved; // struct from can.h representing message
 
 UART_HandleTypeDef btHuart;
 UART_HandleTypeDef ethHuart;
 
-IWDG_HandleTypeDef hiwdg1;
-
 uint8_t UART_ReceivedRaw[19]; // check frame documentation
 uint8_t searching = 0u;
 uint8_t magnetosearching = 0u;
 uint8_t tutaj = 0u;
 
-
-DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart1_tx;
-
 struct commands uartCommands;
-
-
 
 
 /**
@@ -102,37 +93,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
  * *******************************************************************************
 */
 bool BT_Init() {
+	btHuart = huart3;
 
-	btHuart.Instance = USART3;
-	btHuart.Init.BaudRate = 115200;
-	btHuart.Init.WordLength = UART_WORDLENGTH_8B;
-	btHuart.Init.Parity = UART_PARITY_NONE;
-	btHuart.Init.StopBits = UART_STOPBITS_1;
-	btHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	btHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	btHuart.Init.Mode = UART_MODE_RX;
+	Cube_MX_USART3_UART_Init();
 
-	/* Peripheral clock enable */
-	__HAL_RCC_USART3_CLK_ENABLE();
-	__HAL_RCC_GPIOD_CLK_ENABLE();
-
-	btGpio.Pin = GPIO_PIN_8 | GPIO_PIN_9;
-	btGpio.Mode = GPIO_MODE_AF_PP;
-	btGpio.Pull = GPIO_NOPULL;
-	btGpio.Speed = GPIO_SPEED_FREQ_LOW;
-	btGpio.Alternate = GPIO_AF7_USART3;
-	HAL_GPIO_Init(GPIOD, &btGpio);
-
-	HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
-	HAL_NVIC_EnableIRQ(USART3_IRQn);
-
-	HAL_UART_Init(&btHuart);
-
-	HAL_UARTEx_SetRxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_SetTxFifoThreshold(&btHuart, UART_RXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_EnableFifoMode(&btHuart);
-
-	return 0;
+	return true;
 }
 
 /**
@@ -141,9 +106,9 @@ bool BT_Init() {
  * *******************************************************************************
 */
 bool Eth_Init() {
+	ethHuart = huart1;
 
 	__HAL_RCC_DMA1_CLK_ENABLE();
-
 
 	  /* DMA interrupt init */
 	  /* DMA1_Stream0_IRQn interrupt configuration */
@@ -153,27 +118,9 @@ bool Eth_Init() {
 	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 
-    /* USART1 interrupt Init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(USART1_IRQn);
+	Cube_MX_USART1_UART_Init();
 
-	ethHuart.Instance = USART1;
-	ethHuart.Init.BaudRate = 115200;
-	ethHuart.Init.WordLength = UART_WORDLENGTH_8B;
-	ethHuart.Init.Parity = UART_PARITY_NONE;
-	ethHuart.Init.StopBits = UART_STOPBITS_1;
-	ethHuart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	ethHuart.Init.OverSampling = UART_OVERSAMPLING_16;
-	ethHuart.Init.Mode = UART_MODE_TX_RX;
-
-//	HAL_GPIO_Init(GPIOA, &ethGpio);
-
-	HAL_UART_Init(&ethHuart);
-	HAL_UARTEx_SetRxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_SetTxFifoThreshold(&ethHuart, UART_RXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_EnableFifoMode(&ethHuart);
-
-	return 0;
+	return true;
 }
 
 /**
@@ -183,14 +130,7 @@ bool Eth_Init() {
  * *******************************************************************************
 */
 void Watchdog_Init(void){
-	  hiwdg1.Instance = IWDG1;
-	  hiwdg1.Init.Prescaler = IWDG_PRESCALER_32;
-	  hiwdg1.Init.Window = 4095;
-	  hiwdg1.Init.Reload = 4095;
-	  if (HAL_IWDG_Init(&hiwdg1) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
+	Cube_MX_IWDG1_Init();
 }
 
 /**
