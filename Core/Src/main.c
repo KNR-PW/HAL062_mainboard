@@ -112,6 +112,10 @@ void Cube_MX_TIM7_Init(void) {
   MX_TIM7_Init();
 }
 
+void Cube_MX_DMA_Init(void) {
+	MX_DMA_Init();
+}
+
 /* USER CODE END 0 */
 
 /**

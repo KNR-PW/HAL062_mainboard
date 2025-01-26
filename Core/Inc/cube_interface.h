@@ -16,6 +16,7 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 
 
+/* Peripherals declarations --------------------------------------------------*/
 void Cube_SystemClock_Config(void);
 // void Cube_MX_GPIO_Init(void);
 void Cube_MX_FDCAN1_Init(void);
@@ -25,7 +26,13 @@ void Cube_MX_IWDG1_Init(void);
 void Cube_MX_USART3_UART_Init(void);
 void Cube_MX_TIM4_Init(void);
 void Cube_MX_TIM7_Init(void);
+void Cube_MX_DMA_Init(void);
 
 void Cube_Error_Handler(void);
+
+
+/* Interrupts declarations ---------------------------------------------------*/
+void Cube_SysTick_Handler(void);
+
 
 #endif /* CUBE_INTERFACE_H */

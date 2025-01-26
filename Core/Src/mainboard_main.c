@@ -45,6 +45,7 @@ int main(void) {
 
 	Camera_Init();
 	TIM4_Init();
+
 	/* Loop forever */
 	while (1) {
 	}
