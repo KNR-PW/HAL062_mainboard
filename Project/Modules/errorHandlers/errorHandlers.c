@@ -26,8 +26,8 @@ void errorHandler(void) {
 	/// TODO: FInish Error handler!
 	__disable_irq();
 
-	Leds_turnOffAllLeds();
-	Leds_turnOnLed(LED_4);
+	LED_TURN_OFF(LED_ALL);
+	LED_TURN_ON(LED_4);
 	while (1) {
 	}
 }

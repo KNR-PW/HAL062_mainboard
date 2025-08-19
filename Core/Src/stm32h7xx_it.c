@@ -199,7 +199,7 @@ void SysTick_Handler(void)
 	++i;
 	if (i>500)
 	{
-		Leds_toggleLed(LED1);
+		LED_TOGGLE(LED_1);
 		i = 0;
 	}
   /* USER CODE END SysTick_IRQn 0 */
