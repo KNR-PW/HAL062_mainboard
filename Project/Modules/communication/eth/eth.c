@@ -8,7 +8,7 @@ static TIM_HandleTypeDef* ethTim;
 static DataBuffer rxBuffer = {0};
 static DataBuffer txBuffer = {0};
 static uint8_t rxData[19] = {0};
-static uint8_t transmitDone = 0;
+static uint8_t transmitDone = 1;
 
 static void Eth_receivedCallback(UART_HandleTypeDef *huart);
 static void Eth_handleData(Command* command);
@@ -161,12 +161,15 @@ static void Eth_errorCallback(UART_HandleTypeDef *huart)
 */
 static void Eth_timerCallback(TIM_HandleTypeDef *htim)
 {
+//	uint8_t data[19] = {[0]='#', [1 ... 18]='X'};
+
 	//	sending data
 	if( txBuffer.read_ptr != txBuffer.write_ptr)
 	{
 		if( transmitDone == 1)
 		{
 		HAL_UART_Transmit_DMA(ethUart, txBuffer.data[txBuffer.read_ptr], PAYLOAD_SIZE);
+//		HAL_UART_Transmit_DMA(ethUart, data, PAYLOAD_SIZE);
 		transmitDone = 0;
 		txBuffer.read_ptr = (txBuffer.read_ptr+1)%BUFFER_SIZE;
 		}

@@ -11,6 +11,7 @@ extern TIM_HandleTypeDef htim16;
 extern TIM_HandleTypeDef htim14;
 extern TIM_HandleTypeDef htim4;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart6; // rpi testing
 extern UART_HandleTypeDef huart3;
 extern FDCAN_HandleTypeDef hfdcan1;
 extern FDCAN_HandleTypeDef hfdcan2;
@@ -25,7 +26,7 @@ void project_main(void)
 	CAM_start();
 
 	Eth_setTimerPtr(&htim17);
-	Eth_setUartPtr(&huart1);
+	Eth_setUartPtr(&huart6);
 	Eth_registerCallbacks();
 	Eth_startTimer();
 
