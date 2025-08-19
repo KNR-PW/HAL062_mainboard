@@ -23,6 +23,10 @@ void project_main(void)
 	UART_startRecive();
 	CAN_startRecive();
 
+	LED_TURN_ON(LED_ALL);
+	HAL_Delay(2000);
+	LED_TURN_OFF(LED_ALL);
+
 	while(1)
 	{
 

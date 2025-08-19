@@ -77,12 +77,7 @@ static void UART_RXCompleteClb(UART_HandleTypeDef *huart) {
 	} 
 
 	knrFrame_decode(buff + 1, &command.ID, 1);
-	if (!knrFrame_decode(buff + 3, command.payload, 8)) {
-		// error whilst decoding
-		LED_TOGGLE(LED_5);
-		HAL_UART_Receive_DMA(huart, buff, PAYLOAD_SIZE);
-		return;
-	}
+	knrFrame_decode(buff + 3, command.payload, 8);
 
 	if (command.ID == 45) {
 		CAM_setCamerasSource(command.payload[0], command.payload[1], command.payload[2]);
