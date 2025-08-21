@@ -58,6 +58,21 @@ void UART_transmit(Command *command) {
 static void UART_TXCompleteClb(UART_HandleTypeDef *huart) {(void) huart;}
 
 
+static void UART_RXRecoverClb(UART_HandleTypeDef *huart) {
+	uint8_t *buff;
+	if (huart == eth_uart_handle) {
+		buff = eth_data;
+		LED_TOGGLE(LED_3);
+	} else {
+		buff = bt_data;
+		LED_TOGGLE(LED_4);
+	}
+
+	HAL_UART_RegisterCallback(huart, HAL_UART_RX_COMPLETE_CB_ID, UART_RXCompleteClb);
+	HAL_UART_Receive_DMA(huart, buff, PAYLOAD_SIZE);
+}
+
+
 static void UART_RXCompleteClb(UART_HandleTypeDef *huart) {
 	Command command = { 0 };
 	uint8_t *buff;
@@ -72,9 +87,14 @@ static void UART_RXCompleteClb(UART_HandleTypeDef *huart) {
 
 	if (buff[0] != '#') {
 		LED_TOGGLE(LED_5);
-		HAL_UART_Receive_DMA(huart, buff, PAYLOAD_SIZE);
+		HAL_UART_RegisterCallback(huart, HAL_UART_TX_COMPLETE_CB_ID, UART_RXRecoverClb);
+
+		uint8_t i = 0;
+		while (i<18 && (buff[i] != '#')) {i++;}
+		HAL_UART_Receive_DMA(huart, buff, i);
+
 		return;
-	} 
+	}
 
 	knrFrame_decode(buff + 1, &command.ID, 1);
 	knrFrame_decode(buff + 3, command.payload, 8);
@@ -93,7 +113,7 @@ static void UART_RXCompleteClb(UART_HandleTypeDef *huart) {
 
 static void UART_ErrorClb(UART_HandleTypeDef *huart) {
 	(void) huart;
-	LED_TOGGLE(LED_5);
+	LED_TURN_ON(LED_2);
 }
 
 
@@ -123,7 +143,7 @@ uint8_t knrFrame_decode(uint8_t *encoded, uint8_t *data, uint8_t data_length) {
 			data[i] = (encoded[i * 2] - 0x37) << 4;
 			break;
 
-		case 'Z': // end of message
+		case 'X': // end of message
 			return i;
 
 		default:

@@ -1,5 +1,6 @@
 #include "leds/leds.h"
 #include "can/can.h"
+#include "uart/uart.h"
 
 extern FDCAN_HandleTypeDef hfdcan2;
 static FDCAN_HandleTypeDef *rail_can_handle = &hfdcan2;
@@ -43,7 +44,7 @@ void CAN_transmit(Command *command) {
 	FDCAN_HandleTypeDef *handle;
 	FDCAN_TxHeaderTypeDef *header;
 
-	if (command->ID > 0 && command->ID < 128){
+	if (command->ID > 0 && command->ID < 128) {
 		handle = rail_can_handle;
 		header = &railCanTxHeader;
 	} else {
@@ -58,11 +59,8 @@ void CAN_transmit(Command *command) {
 
 	railCanTxHeader.Identifier = command->ID; //< ID of message
 
-	// I have no clue about this function checking that the CAN handle 
-	// is enabled, as it checks only for HAL_FDCAN_STATE_BUSY and throws an 
-	// error otherwise. If code throws HAL_FDCAN_ERROR_NOT_INITIALIZED for no 
-	// reason this is the culprit
-	HAL_FDCAN_AddMessageToTxFifoQ(handle, header, command->payload);
+	HAL_FDCAN_AddMessageToTxBuffer(handle, header, command->payload, FDCAN_TX_BUFFER0);
+	HAL_FDCAN_EnableTxBufferRequest(handle, FDCAN_TX_BUFFER0);
 }
 
 
@@ -81,12 +79,15 @@ static void CAN_RXCompleteClb(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) 
 
 	HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &canHeader, command.payload);
 	command.ID = (uint8_t) canHeader.Identifier;
+
+	UART_transmit(&command);
 }
 
 
 static void CAN_errorClb(FDCAN_HandleTypeDef *hfdcan, uint32_t status) {
 	(void) hfdcan;
 	(void) status;
+	LED_TURN_ON(LED_2);
 }
 
 
