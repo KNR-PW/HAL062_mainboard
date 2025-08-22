@@ -16,18 +16,20 @@
 
 /* Functions ------------------------------------------------------------------- */
 
+// usage - warn(__FILE__, __LINE__, 0);
+// tip: use " #line __LINE__ "Modules/MODULE/MODULE.c" " to avoid exposing the whole path
+void warn(char *filename, uint32_t line, uint32_t info) {
+	LED_TOGGLE(LED_2);
+}
 
-/**
- ******************************************************************************
- * @details			:	Error handling - turn off leds and while loop
- ******************************************************************************
- */
-void errorHandler(void) {
-	/// TODO: FInish Error handler!
+
+// usage - error(__FILE__, __LINE__, 0);
+// tip: use " #line __LINE__ "Modules/MODULE/MODULE.c" " to avoid exposing the whole path
+void error(char *filename, uint32_t line, uint32_t info) {
 	__disable_irq();
 
 	LED_TURN_OFF(LED_ALL);
-	LED_TURN_ON(LED_4);
+	LED_TURN_ON(LED_1);
 	while (1) {
 	}
 }

@@ -11,6 +11,7 @@
 
 /* Functions ----------------------------------------------------------------- */
 
-void errorHandler(void);
+void warn(char *filename, uint32_t line, uint32_t info);
+void error(char *filename, uint32_t line, uint32_t info);
 
 #endif /* ERROR_HANDLERS_ERROR_HANDLERS_H_ */

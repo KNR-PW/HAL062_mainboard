@@ -68,10 +68,8 @@ void FDCAN2_IT1_IRQHandler(void);
 void TIM4_IRQHandler(void);
 void USART1_IRQHandler(void);
 void USART3_IRQHandler(void);
-void TIM8_TRG_COM_TIM14_IRQHandler(void);
+void TIM7_IRQHandler(void);
 void USART6_IRQHandler(void);
-void TIM16_IRQHandler(void);
-void TIM17_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

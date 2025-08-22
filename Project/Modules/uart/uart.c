@@ -2,6 +2,8 @@
 #include "uart/uart.h"
 #include "can/can.h"
 #include "camera/camera.h"
+#include "errorHandlers/errorHandlers.h"
+#include "watchdog/watchdog.h"
 
 extern UART_HandleTypeDef huart6; // huart1
 extern UART_HandleTypeDef huart3;
@@ -40,7 +42,7 @@ void UART_startRecive(void) {
 
 void UART_transmit(Command *command) {
 	if (eth_uart_handle->gState != HAL_UART_STATE_READY || bt_uart_handle->gState != HAL_UART_STATE_READY) {
-		LED_TOGGLE(LED_5);
+		warn(__FILE__, __LINE__, 0);
 		return;
 	}
 
@@ -60,12 +62,11 @@ static void UART_TXCompleteClb(UART_HandleTypeDef *huart) {(void) huart;}
 
 static void UART_RXRecoverClb(UART_HandleTypeDef *huart) {
 	uint8_t *buff;
+
 	if (huart == eth_uart_handle) {
 		buff = eth_data;
-		LED_TOGGLE(LED_3);
 	} else {
 		buff = bt_data;
-		LED_TOGGLE(LED_4);
 	}
 
 	HAL_UART_RegisterCallback(huart, HAL_UART_RX_COMPLETE_CB_ID, UART_RXCompleteClb);
@@ -77,16 +78,16 @@ static void UART_RXCompleteClb(UART_HandleTypeDef *huart) {
 	Command command = { 0 };
 	uint8_t *buff;
 
+	WATCHDOG_UART_Refresh();
+
 	if (huart == eth_uart_handle) {
 		buff = eth_data;
-		LED_TOGGLE(LED_3);
 	} else {
 		buff = bt_data;
-		LED_TOGGLE(LED_4);
 	}
 
 	if (buff[0] != '#') {
-		LED_TOGGLE(LED_5);
+		warn(__FILE__, __LINE__, 0);
 		HAL_UART_RegisterCallback(huart, HAL_UART_TX_COMPLETE_CB_ID, UART_RXRecoverClb);
 
 		uint8_t i = 0;
@@ -113,7 +114,7 @@ static void UART_RXCompleteClb(UART_HandleTypeDef *huart) {
 
 static void UART_ErrorClb(UART_HandleTypeDef *huart) {
 	(void) huart;
-	LED_TURN_ON(LED_2);
+	error(__FILE__, __LINE__, huart->ErrorCode);
 }
 
 

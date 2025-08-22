@@ -1,6 +1,7 @@
 #include "leds/leds.h"
 #include "can/can.h"
 #include "uart/uart.h"
+#include "errorHandlers/errorHandlers.h"
 
 extern FDCAN_HandleTypeDef hfdcan2;
 static FDCAN_HandleTypeDef *rail_can_handle = &hfdcan2;
@@ -18,11 +19,9 @@ static void CAN_TXCompleteClb(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs);
 static void CAN_RXCompleteClb(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs);
 static void CAN_errorClb(FDCAN_HandleTypeDef *hfdcan, uint32_t status);
 
+#define FDCAN_ERROR_ALL FDCAN_IT_RAM_ACCESS_FAILURE | FDCAN_IT_ERROR_LOGGING_OVERFLOW | FDCAN_IT_RAM_WATCHDOG | FDCAN_IT_ARB_PROTOCOL_ERROR | FDCAN_IT_DATA_PROTOCOL_ERROR | FDCAN_IT_RESERVED_ADDRESS_ACCESS | FDCAN_IT_ERROR_PASSIVE | FDCAN_IT_ERROR_WARNING | FDCAN_IT_BUS_OFF
 
 void CAN_init(void) {
-	CAN_setupTxHeaders();
-	CAN_setupFilterConfigs();
-
 	HAL_FDCAN_RegisterRxFifo0Callback(rail_can_handle, CAN_RXCompleteClb);
 	HAL_FDCAN_RegisterRxFifo0Callback(ext_can_handle, CAN_RXCompleteClb);
 
@@ -31,12 +30,23 @@ void CAN_init(void) {
 
 	HAL_FDCAN_RegisterErrorStatusCallback(rail_can_handle, CAN_errorClb);
 	HAL_FDCAN_RegisterErrorStatusCallback(ext_can_handle, CAN_errorClb);
+	HAL_FDCAN_ActivateNotification(rail_can_handle, FDCAN_ERROR_ALL, 0);
+	HAL_FDCAN_ActivateNotification(ext_can_handle, FDCAN_ERROR_ALL, 0);
+
+	CAN_setupTxHeaders();
+	CAN_setupFilterConfigs();
 }
 
 
 void CAN_startRecive(void) {
 	HAL_FDCAN_ActivateNotification(rail_can_handle, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
 	HAL_FDCAN_ActivateNotification(ext_can_handle, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+
+	HAL_FDCAN_ActivateNotification(rail_can_handle, FDCAN_IT_TX_COMPLETE, 0);
+	HAL_FDCAN_ActivateNotification(ext_can_handle, FDCAN_IT_TX_COMPLETE, 0);
+
+	HAL_FDCAN_Start(rail_can_handle);
+	HAL_FDCAN_Start(ext_can_handle);
 }
 
 
@@ -45,22 +55,24 @@ void CAN_transmit(Command *command) {
 	FDCAN_TxHeaderTypeDef *header;
 
 	if (command->ID > 0 && command->ID < 128) {
+		LED_TOGGLE(LED_4);
 		handle = rail_can_handle;
 		header = &railCanTxHeader;
 	} else {
+		LED_TOGGLE(LED_5);
 		handle = ext_can_handle;
 		header = &extCanTxHeader;
 	}
 
-	if (HAL_FDCAN_GetTxFifoFreeLevel(handle) != 0u) {
-		LED_TOGGLE(LED_5);
+	if (HAL_FDCAN_GetTxFifoFreeLevel(handle) == 0U) {
+		warn(__FILE__, __LINE__, 0);
 		return;
 	}
 
 	railCanTxHeader.Identifier = command->ID; //< ID of message
 
-	HAL_FDCAN_AddMessageToTxBuffer(handle, header, command->payload, FDCAN_TX_BUFFER0);
-	HAL_FDCAN_EnableTxBufferRequest(handle, FDCAN_TX_BUFFER0);
+	HAL_FDCAN_AddMessageToTxFifoQ(handle, header, command->payload);
+	HAL_FDCAN_EnableTxBufferRequest(handle, HAL_FDCAN_GetLatestTxFifoQRequestBuffer(handle));
 }
 
 
@@ -86,8 +98,7 @@ static void CAN_RXCompleteClb(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) 
 
 static void CAN_errorClb(FDCAN_HandleTypeDef *hfdcan, uint32_t status) {
 	(void) hfdcan;
-	(void) status;
-	LED_TURN_ON(LED_2);
+	error(__FILE__, __LINE__, status);
 }
 
 
@@ -128,7 +139,7 @@ static void CAN_setupFilterConfigs(void) {
 	sFilterConfig.RxBufferIndex = 0;
 
 	if (HAL_FDCAN_ConfigFilter(rail_can_handle, &sFilterConfig) != HAL_OK) {
-		LED_TOGGLE(LED_5);
+		error(__FILE__, __LINE__, 0);
 	}
 
 	/* Configure standard ID reception filter to Rx buffer 0 */
@@ -140,7 +151,7 @@ static void CAN_setupFilterConfigs(void) {
 	sFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
 	sFilterConfig.RxBufferIndex = 0;
 	if (HAL_FDCAN_ConfigFilter(ext_can_handle, &sFilterConfig) != HAL_OK) {
-		LED_TOGGLE(LED_5);
+		error(__FILE__, __LINE__, 0);
 	}
 }
 

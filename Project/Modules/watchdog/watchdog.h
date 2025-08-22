@@ -1,0 +1,11 @@
+#ifndef PROJECT_MODULES_WATCHDOG_WATCHDOG_H
+#define PROJECT_MODULES_WATCHDOG_WATCHDOG_H
+
+#include "stm32h7xx.h"
+
+//#define RESET_ON_COMS_LOSS
+
+void WATCHDOG_init(void);
+void WATCHDOG_UART_Refresh(void);
+
+#endif //PROJECT_MODULES_WATCHDOG_WATCHDOG_H
