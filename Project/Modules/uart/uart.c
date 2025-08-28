@@ -24,19 +24,22 @@ static uint8_t bt_data[PAYLOAD_SIZE] = { 0 };
 
 void UART_init(void) {
 	HAL_UART_RegisterCallback(eth_uart_handle, HAL_UART_TX_COMPLETE_CB_ID, UART_TXCompleteClb);
-	HAL_UART_RegisterCallback(bt_uart_handle, HAL_UART_TX_COMPLETE_CB_ID, UART_TXCompleteClb);
-	
 	HAL_UART_RegisterCallback(eth_uart_handle, HAL_UART_RX_COMPLETE_CB_ID, UART_RXCompleteClb);
-	HAL_UART_RegisterCallback(bt_uart_handle, HAL_UART_RX_COMPLETE_CB_ID, UART_RXCompleteClb);
-	
 	HAL_UART_RegisterCallback(eth_uart_handle, HAL_UART_ERROR_CB_ID, UART_ErrorClb);
+	
+#ifdef BT_COMMS_ENABLED
+	HAL_UART_RegisterCallback(bt_uart_handle, HAL_UART_RX_COMPLETE_CB_ID, UART_RXCompleteClb);
+	HAL_UART_RegisterCallback(bt_uart_handle, HAL_UART_TX_COMPLETE_CB_ID, UART_TXCompleteClb);
 	HAL_UART_RegisterCallback(bt_uart_handle, HAL_UART_ERROR_CB_ID, UART_ErrorClb);
+#endif
 }
 
 
 void UART_startRecive(void) {
 	HAL_UART_Receive_DMA(eth_uart_handle, eth_data, PAYLOAD_SIZE);
+#ifdef BT_COMMS_ENABLED
 	HAL_UART_Receive_DMA(bt_uart_handle, bt_data, PAYLOAD_SIZE);
+#endif
 }
 
 

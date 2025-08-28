@@ -69,7 +69,7 @@ void CAN_transmit(Command *command) {
 		return;
 	}
 
-	railCanTxHeader.Identifier = command->ID; //< ID of message
+	header->Identifier = command->ID; //< ID of message
 
 	HAL_FDCAN_AddMessageToTxFifoQ(handle, header, command->payload);
 	HAL_FDCAN_EnableTxBufferRequest(handle, HAL_FDCAN_GetLatestTxFifoQRequestBuffer(handle));
@@ -127,30 +127,32 @@ static void CAN_setupTxHeaders(void) {
 
 
 static void CAN_setupFilterConfigs(void) {
-	FDCAN_FilterTypeDef sFilterConfig;
+	FDCAN_FilterTypeDef railFilterConfig;
 
 	/* Configure standard ID reception filter to Rx buffer 0 */
-	sFilterConfig.IdType = FDCAN_STANDARD_ID;
-	sFilterConfig.FilterIndex = 0;
-	sFilterConfig.FilterType = FDCAN_FILTER_RANGE; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
-	sFilterConfig.FilterID1 = 0x00000000; // ID Node2
-	sFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-	sFilterConfig.RxBufferIndex = 0;
+	railFilterConfig.IdType = FDCAN_STANDARD_ID;
+	railFilterConfig.FilterIndex = 0;
+	railFilterConfig.FilterType = FDCAN_FILTER_RANGE; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+	railFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXBUFFER;
+	railFilterConfig.FilterID1 = 0x00000000; // ID Node2
+	railFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+	railFilterConfig.RxBufferIndex = 0;
 
-	if (HAL_FDCAN_ConfigFilter(rail_can_handle, &sFilterConfig) != HAL_OK) {
+	if (HAL_FDCAN_ConfigFilter(rail_can_handle, &railFilterConfig) != HAL_OK) {
 		error(__FILE__, __LINE__, 0);
 	}
 
+	FDCAN_FilterTypeDef extFilterConfig;
+
 	/* Configure standard ID reception filter to Rx buffer 0 */
-	sFilterConfig.IdType = FDCAN_STANDARD_ID;
-	sFilterConfig.FilterIndex = 0;
-	sFilterConfig.FilterType = FDCAN_FILTER_RANGE; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-	sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-	sFilterConfig.FilterID1 = 0x00000000; // ID Node2
-	sFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
-	sFilterConfig.RxBufferIndex = 0;
-	if (HAL_FDCAN_ConfigFilter(ext_can_handle, &sFilterConfig) != HAL_OK) {
+	extFilterConfig.IdType = FDCAN_STANDARD_ID;
+	extFilterConfig.FilterIndex = 0;
+	extFilterConfig.FilterType = FDCAN_FILTER_RANGE; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+	extFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+	extFilterConfig.FilterID1 = 0x00000000; // ID Node2
+	extFilterConfig.FilterID2 = 0xFFFFFFFF; // Ignore because FDCAN_FILTER_TO_RXBUFFER
+	extFilterConfig.RxBufferIndex = 0;
+	if (HAL_FDCAN_ConfigFilter(ext_can_handle, &extFilterConfig) != HAL_OK) {
 		error(__FILE__, __LINE__, 0);
 	}
 }

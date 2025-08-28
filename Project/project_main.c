@@ -12,7 +12,7 @@ extern FDCAN_HandleTypeDef hfdcan2;
 
 void project_main(void)
 {
-	WATCHDOG_init();
+//	WATCHDOG_init();
 	CAM_setCamerasTimerPtr(&htim4);
 	CAM_registerCallbacks();
 	CAM_start();

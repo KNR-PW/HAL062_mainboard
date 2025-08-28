@@ -19,7 +19,7 @@
 // usage - warn(__FILE__, __LINE__, 0);
 // tip: use " #line __LINE__ "Modules/MODULE/MODULE.c" " to avoid exposing the whole path
 void warn(char *filename, uint32_t line, uint32_t info) {
-	LED_TOGGLE(LED_2);
+	LED_TURN_ON(LED_2);
 }
 
 
