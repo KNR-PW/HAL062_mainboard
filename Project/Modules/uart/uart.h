@@ -5,7 +5,7 @@
 #include "communication/data.h"
 
 #define PAYLOAD_SIZE 19
-#define BT_COMMS_ENABLED
+//#define BT_COMMS_ENABLED
 
 
 void UART_init(void);
